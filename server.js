@@ -71,9 +71,9 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-pool.connect()
-  .then(() => console.log("✅ Connected to Render PostgreSQL Database"))
-  .catch((err) => console.error("❌ Database connection error:", err));
+pool.query('SELECT NOW()')
+  .then(res => console.log('DB connected:', res.rows[0]))
+  .catch(err => console.error('DB connection error:', err));
 
 // ---------------- Nodemailer Setup ----------------
 const transporter = nodemailer.createTransport({
