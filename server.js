@@ -316,11 +316,12 @@ app.post("/api/register", async (req, res) => {
   }
 
   try {
-    // Check if user exists
+    // Check if user exists (case-insensitive)
     const existingUser = await pool.query(
-      "SELECT * FROM users WHERE LOWER(email) = LOWER($1)",
+      "SELECT id FROM users WHERE LOWER(email) = LOWER($1)",
       [email]
     );
+
     if (existingUser.rows.length > 0) {
       return res.status(400).json({ message: "Email already registered" });
     }
@@ -328,16 +329,17 @@ app.post("/api/register", async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert into database
+    // Insert new user into database
     const newUserResult = await pool.query(
       `INSERT INTO users (first_name, last_name, email, password, role, active)
        VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, email`,
+       RETURNING id, email, first_name`,
       [firstName, lastName, email, hashedPassword, "client", true]
     );
+
     const newUser = newUserResult.rows[0];
 
-    // Log and send welcome email
+    // Log action and send welcome email
     logAction("USER_REGISTER", { email, id: newUser.id });
     await sendMail({
       to: email,
@@ -354,12 +356,12 @@ app.post("/api/register", async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Register Error:", err);
     res.status(500).json({ message: "Failed to create account" });
   }
 });
 
-// ---------------- LOGIN ----------------
+// ------------------------ LOGIN USER -----------------------------
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -368,33 +370,22 @@ app.post("/api/login", async (req, res) => {
   }
 
   try {
-    // Query user from database
+    // Fetch user from database
     const result = await pool.query(
-      "SELECT * FROM users WHERE LOWER(email) = LOWER($1)",
+      "SELECT id, email, password, role FROM users WHERE LOWER(email) = LOWER($1)",
       [email]
     );
+
     const user = result.rows[0];
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    if (!user.password) {
-      return res.status(400).json({ message: "Password not set for this account" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user.password) return res.status(400).json({ message: "Password not set for this account" });
 
     // Compare password
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(401).json({ message: "Incorrect password" });
-    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ message: "Incorrect password" });
 
     // Generate JWT
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" }
-    );
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "24h" });
 
     logAction("USER_LOGIN", { email, id: user.id });
     console.log(`✅ Login successful: ${email}`);
@@ -408,7 +399,7 @@ app.post("/api/login", async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Login Error:", err);
     res.status(500).json({ message: "Login failed" });
   }
 });
