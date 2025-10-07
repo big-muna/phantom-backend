@@ -16,6 +16,10 @@ import jwt from "jsonwebtoken";
 import { Pool } from "pg";
 import { fileURLToPath } from "url";
 
+// ✅ Define __dirname for ES modules (must come before using it)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // ---------------- Initialize ----------------
 dotenv.config();
 const app = express();
@@ -347,10 +351,11 @@ app.post("/api/register", async (req, res) => {
     console.log(`✅ New user registered: ${email}`);
 
     res.status(201).json({
-      success: true,
-      message: "Account created successfully",
-      userId: newUserId,
-    });
+    success: true,
+    message: "Account created successfully",
+    userId: newUser.id,
+ });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to create account" });
