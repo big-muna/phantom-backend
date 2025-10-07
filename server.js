@@ -11,10 +11,9 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const FacebookStrategy = require("passport-facebook").Strategy;
-const InstagramStrategy = require("passport-instagram").Strategy;
-const AppleStrategy = require("passport-apple");
 const session = require("express-session");
+const { Pool } = require('pg');
+const jwt = require("jsonwebtoken");
 
 // ---------------- Config ----------------
 dotenv.config();
@@ -39,6 +38,24 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use('/images', express.static(path.join(__dirname, '..', 'images')));
+
+// JWT Authentication Middleware
+function authenticateJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    const token = authHeader.split(" ")[1];
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+      if (err) {
+        return res.sendStatus(403); // forbidden if token invalid
+      }
+      req.user = user;
+      next(); // pass control to next middleware/route
+    });
+  } else {
+    res.sendStatus(401); // unauthorized if no token
+  }
+}
 
 // ---------------- PostgreSQL Connection ----------------
 const pool = new Pool({
@@ -190,70 +207,12 @@ passport.use(new GoogleStrategy({
 }));
 
 // ------------------------ APPLE STRATEGY -----------------------------
-passport.use(new AppleStrategy({
-  clientID: process.env.APPLE_ID,
-  teamID: process.env.APPLE_TEAM_ID,
-  callbackURL: "/auth/apple/callback",
-  keyID: process.env.APPLE_KEY_ID,
-  privateKeyLocation: process.env.APPLE_KEY_PATH
-}, (accessToken, refreshToken, idToken, profile, done) => {
-  const email = profile.email || `apple_${profile.id}@apple.com`;
-  let user = users.find(u => u.email === email);
-  if (!user) {
-    user = {
-      id: users.length + 1,
-      username: profile.name || "Apple User",
-      email,
-      role: "client",
-      active: true
-    };
-    users.push(user);
-  }
-  return done(null, user);
-}));
+// Temporary placeholder to prevent errors
+passport.use('apple-placeholder', (req, done) => {
+  done(null, { id: 0, username: 'Guest', email: 'guest@example.com', role: 'client' });
+});
 
-// ------------------------ INSTAGRAM STRATEGY -------------------------
-passport.use(new InstagramStrategy({
-  clientID: process.env.INSTAGRAM_ID,
-  clientSecret: process.env.INSTAGRAM_SECRET,
-  callbackURL: "/auth/instagram/callback"
-}, (accessToken, refreshToken, profile, done) => {
-  let email = profile.username + "@instagram.com"; // fallback since Instagram may not return email
-  let user = users.find(u => u.email === email);
-  if (!user) {
-    user = {
-      id: users.length + 1,
-      username: profile.displayName || profile.username,
-      email,
-      role: "client",
-      active: true
-    };
-    users.push(user);
-  }
-  return done(null, user);
-}));
 
-// ------------------------ FACEBOOK STRATEGY --------------------------
-passport.use(new FacebookStrategy({
-  clientID: process.env.FACEBOOK_ID,
-  clientSecret: process.env.FACEBOOK_SECRET,
-  callbackURL: "/auth/facebook/callback",
-  profileFields: ['id', 'displayName', 'emails']
-}, (accessToken, refreshToken, profile, done) => {
-  let email = profile.emails ? profile.emails[0].value : `${profile.id}@facebook.com`;
-  let user = users.find(u => u.email === email);
-  if (!user) {
-    user = {
-      id: users.length + 1,
-      username: profile.displayName,
-      email,
-      role: "client",
-      active: true
-    };
-    users.push(user);
-  }
-  return done(null, user);
-}));
 
 // ------------------------ SERIALIZATION ------------------------------
 passport.serializeUser((user, done) => done(null, user.id));
@@ -657,23 +616,6 @@ app.patch("/api/admin/tickets/:id", authenticateJWT, (req, res) => {
   res.json({ success: true, message: "✅ Ticket status updated!", ticket });
 });
 
-// Serve frontend (if needed)
-app.use(express.static(path.join(__dirname, "../frontend")));
-
-// Catch-all route
-app.get("*", (req, res) => res.status(404).send("Page not found"));
-
-// ---------------- WebSocket ----------------
-io.on("connection", socket => {
-  console.log("Client connected:", socket.id);
-  // optionally send current tickets on connect
-  socket.emit("initTickets", tickets);
-});
-
-// Get all tickets
-app.get("/api/admin/tickets", authenticateJWT, (req, res) => {
-  res.json({ success: true, total: tickets.length, tickets });
-});
 
 // ------------------------ SYSTEM SETTINGS ------------------------
 
@@ -982,7 +924,9 @@ const authRoutes = require("./routes/auth");
 app.use("/api/auth", authRoutes);
 
 // ---------------- Catch-all ----------------
-app.get("*", (req, res) => res.sendFile(path.join(frontendPath, "index.html")));
+app.get('/*', (req, res) => {
+  res.send('Catch all route');
+});
 
 // =====================================================================
 // ------------------------- SERVER START ------------------------------
