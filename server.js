@@ -917,7 +917,6 @@ import authRoutes from "./routes/auth.js";
 app.use("/api/auth", authRoutes);
 
 // ✅ Catch-all route for frontend
-// ✅ Catch-all route for frontend
 app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -931,4 +930,3 @@ io.on("connection", (socket) => {
   console.log("🔌 Client connected:", socket.id);
   socket.emit("initData", recoveryHistory);
 });
-
