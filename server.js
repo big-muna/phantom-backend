@@ -918,7 +918,7 @@ app.use("/api/auth", authRoutes);
 
 // ✅ Catch-all route for frontend
 app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html','about.html'));
 });
 
 // ------------------------- SERVER START ------------------------------
