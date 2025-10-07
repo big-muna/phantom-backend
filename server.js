@@ -911,6 +911,9 @@ pages.forEach((page) => {
 const authRoutes = require("./routes/auth");
 app.use("/api/auth", authRoutes);
 
+app.use((req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
 
 // =====================================================================
 // ------------------------- SERVER START ------------------------------
