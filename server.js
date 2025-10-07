@@ -917,10 +917,11 @@ import authRoutes from "./routes/auth.js";
 app.use("/api/auth", authRoutes);
 
 // ✅ Catch-all route for frontend
+// ✅ Catch-all route for frontend
 app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-// =====================================================================
 // ------------------------- SERVER START ------------------------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
@@ -930,3 +931,4 @@ io.on("connection", (socket) => {
   console.log("🔌 Client connected:", socket.id);
   socket.emit("initData", recoveryHistory);
 });
+
