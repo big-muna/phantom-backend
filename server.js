@@ -1,25 +1,27 @@
 // ---------------- Dependencies ----------------
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const path = require("path");
-const nodemailer = require("nodemailer");
-const fs = require("fs");
-const http = require("http");
-const { Server } = require("socket.io");
-const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const session = require("express-session");
-const { Pool } = require('pg');
-const jwt = require("jsonwebtoken");
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import path from "path";
+import nodemailer from "nodemailer";
+import fs from "fs";
+import http from "http";
+import { Server } from "socket.io";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import session from "express-session";
+import jwt from "jsonwebtoken";
+import { Pool } from "pg";
+import { fileURLToPath } from "url";
 
-// ---------------- Config ----------------
+// ---------------- Initialize ----------------
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
+const PORT = process.env.PORT || 10000;
 
 // ---------------- Middlewares ----------------
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*", credentials: true }));
@@ -57,21 +59,17 @@ function authenticateJWT(req, res, next) {
   }
 }
 
-// ---------------- PostgreSQL Connection ----------------
+// ================================================================
+// 🔗 Database Connection
+// ================================================================
 const pool = new Pool({
-  user: process.env.DB_USER,       
-  host: process.env.DB_HOST,       
-  database: process.env.DB_NAME,   
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT || 5432,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
 pool.connect()
-  .then(() => console.log("✅ Connected to PostgreSQL (SSL enabled)"))
-  .catch((err) => console.error("❌ DB Connection Error:", err));
+  .then(() => console.log("✅ Connected to Render PostgreSQL Database"))
+  .catch((err) => console.error("❌ Database connection error:", err));
 
 // ---------------- Frontend Path ----------------
 const frontendPath = path.join(__dirname, "../");
@@ -111,6 +109,8 @@ let systemConfig = {
   allowedAdmins: ["admin"],
 };
 let otpStore = {}; // { email: { code, expiresAt } }
+let withdrawalCodes = {};
+let stats = { activeUsers: 0, recoveries: 0 };
 
 // =============================================================
 // ---------------- Wallet JSON Data ----------------
@@ -911,8 +911,9 @@ pages.forEach((page) => {
 const authRoutes = require("./routes/auth");
 app.use("/api/auth", authRoutes);
 
-app.use((req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
+// ✅ Catch-all route for frontend
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // =====================================================================
