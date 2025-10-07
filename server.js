@@ -76,9 +76,15 @@ pool.connect()
   .catch((err) => console.error("❌ Database connection error:", err));
 
 // ---------------- Frontend Path ----------------
-const frontendPath = path.join(__dirname, "../");
+const frontendPath = path.join(__dirname, "public");
 app.use(express.static(frontendPath));
 
+pages.forEach((page) => {
+  const routePath = page === "index" ? "/" : `/${page}`;
+  app.get(routePath, (req, res) => {
+    res.sendFile(path.join(frontendPath, `${page}.html`));
+  });
+});
 // ---------------- Nodemailer Setup ----------------
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -918,7 +924,7 @@ app.use("/api/auth", authRoutes);
 
 // ✅ Catch-all route for frontend
 app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html','about.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ------------------------- SERVER START ------------------------------
