@@ -912,8 +912,8 @@ const authRoutes = require("./routes/auth");
 app.use("/api/auth", authRoutes);
 
 // ---------------- Catch-all ----------------
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+app.use((req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // =====================================================================
