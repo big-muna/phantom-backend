@@ -912,7 +912,7 @@ pages.forEach((page) => {
   });
 });
 
-const authRoutes = require("./routes/auth");
+import authRoutes from "./routes/auth.js";
 app.use("/api/auth", authRoutes);
 
 // ✅ Catch-all route for frontend
