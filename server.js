@@ -16,7 +16,7 @@ import jwt from "jsonwebtoken";
 import { Pool } from "pg";
 import { fileURLToPath } from "url";
 
-// ✅ Define __dirname for ES modules (must come before using it)
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -63,9 +63,6 @@ function authenticateJWT(req, res, next) {
   }
 }
 
-// ================================================================
-// 🔗 Database Connection
-// ================================================================
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
@@ -181,12 +178,6 @@ function saveRecovery({ type, status, details, user }) {
   return entry;
 }
 
-
-// =====================================================================
-// ------------------------ PASSPORT STRATEGIES ------------------------
-// =====================================================================
-
-
 // ------------------------ GOOGLE STRATEGY ----------------------------
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -204,24 +195,12 @@ passport.use(new GoogleStrategy({
     };
     users.push(user);
   }
-  return done(null, user);
-}));
-
-// ------------------------ APPLE STRATEGY -----------------------------
-// Temporary placeholder to prevent errors
-passport.use('apple-placeholder', (req, done) => {
-  done(null, { id: 0, username: 'Guest', email: 'guest@example.com', role: 'client' });
-});
-
-
+  return done(null, user);}
+));
 
 // ------------------------ SERIALIZATION ------------------------------
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser((id, done) => done(null, users.find(u => u.id === id)));
-
-// =====================================================================
-// ------------------------ OAUTH ROUTES -------------------------------
-// =====================================================================
 
 // ----- GOOGLE -----
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -238,10 +217,6 @@ app.get('/auth/google/callback',
   }
 );
 
-// =====================================================================
-// ------------------------ PUBLIC ENDPOINTS ---------------------------
-// =====================================================================
-
 // Get public stats
 app.get('/api/stats', (req, res) => {
   res.json(stats);
@@ -253,10 +228,6 @@ app.post("/api/stats/update", authenticateJWT, (req, res) => {
   io.emit("statsUpdated", stats);
   res.json({ message: "Stats updated", stats });
 });
-
-// =====================================================================
-// ------------------------ AUTH ENDPOINTS -----------------------------
-// =====================================================================
 
 // Request OTP
 app.post("/api/auth/request-otp", async (req, res) => {
@@ -319,8 +290,6 @@ app.post("/api/auth/reset-password", async (req, res) => {
   }
 });
 
-// =====================================================================
-// ------------------------ REGISTER USER -----------------------------
 app.post("/api/register", async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 
@@ -421,8 +390,6 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// =====================================================================
-// ------------------------ USER PROFILE & PREFERENCES ----------------
 app.get("/api/user/:id", (req, res) => {
   const user = users.find(u => u.id == req.params.id);
   if(!user) return res.status(404).json({ message:"User not found" });
@@ -436,10 +403,6 @@ app.patch("/api/user/:id", (req, res) => {
   logAction("USER_UPDATE", { id: user.id, changes: req.body });
   res.json({ message:"Profile updated", user });
 });
-
-// ===================== ADMIN & SYSTEM ROUTES =====================
-
-// ------------------------ USER MANAGEMENT ------------------------
 
 // Get all users (admin only)
 app.get("/api/admin/users", authenticateJWT, async (req, res) => {
