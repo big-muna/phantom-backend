@@ -202,14 +202,6 @@ passport.use(new GoogleStrategy({
   return done(null, user);
 }));
 
-// ------------------------ APPLE STRATEGY -----------------------------
-// Temporary placeholder to prevent errors
-passport.use('apple-placeholder', (req, done) => {
-  done(null, { id: 0, username: 'Guest', email: 'guest@example.com', role: 'client' });
-});
-
-
-
 // ------------------------ SERIALIZATION ------------------------------
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser((id, done) => done(null, users.find(u => u.id === id)));
