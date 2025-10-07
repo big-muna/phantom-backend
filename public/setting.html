@@ -1,0 +1,496 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phantom Recovery - Settings</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #f8fafc;
+    overflow-x: hidden;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 6rem 1.5rem 2rem; }
+
+  /* Navbar */
+  .navbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(124,58,237,0.3);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 1.5rem;
+    z-index: 1000;
+  }
+  .navbar h2 { font-size: 1.3rem; color: #fff; font-weight: 600; }
+  .nav-links { display: flex; gap: 1rem; }
+  .nav-links a {
+    color: #fff; text-decoration: none;
+    padding: 0.5rem 0.9rem;
+    border-radius: 0.6rem;
+    transition: 0.3s;
+    font-weight: 500;
+  }
+  .nav-links a:hover, .nav-links a.active {
+    background: linear-gradient(135deg,#7c3aed,#a855f7);
+    box-shadow: 0 8px 20px rgba(124,58,237,0.4);
+  }
+  .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+  @media(max-width:768px){
+    .nav-links { 
+      display: none; flex-direction: column; gap: 0.8rem;
+      background: rgba(0,0,0,0.5); padding: 1rem;
+      position: absolute; top: 65px; right: 10px;
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 0.8rem;
+    }
+    .nav-links.show { display: flex; }
+    .menu-toggle { display: block; }
+  }
+
+  /* Header */
+  .header { margin-bottom: 2rem; text-align: center; }
+  .header h1 { font-size: 2.2rem; margin-bottom: 0.3rem; color: #fff; }
+  .header p { opacity: 0.8; }
+
+  /* Tabs */
+  .tabs-container {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(15px);
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(124,58,237,0.2);
+    overflow-x: auto;
+  }
+  .tabs { display: flex; gap: 0.5rem; min-width: max-content; }
+  .tab {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(124,58,237,0.2);
+    color: #f8fafc;
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.7rem;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .tab.active {
+    background: linear-gradient(135deg,#7c3aed,#a855f7);
+    border-color: #a855f7;
+    box-shadow: 0 8px 25px rgba(124,58,237,0.4);
+  }
+
+  /* Settings Grid */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  /* Setting Card */
+  .setting-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(15px);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(124,58,237,0.2);
+    transition: 0.3s;
+  }
+  .setting-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 50px rgba(124,58,237,0.4);
+  }
+  .card-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.2rem; }
+  .card-title { font-size: 1.3rem; font-weight: 600; color: #a855f7; }
+  .card-description { font-size: 0.9rem; opacity: 0.8; margin-bottom: 1.2rem; }
+
+  /* Forms */
+  .form-group { margin-bottom: 1rem; }
+  .form-label { display: block; margin-bottom: 0.4rem; font-weight: 500; font-size: 0.9rem; }
+  .form-input, .form-select {
+    width: 100%; background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(124,58,237,0.3);
+    border-radius: 0.6rem; padding: 0.8rem;
+    color: #f8fafc; font-size: 0.95rem;
+  }
+  .form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #a855f7;
+    box-shadow: 0 0 15px rgba(168,85,247,0.5);
+  }
+
+  /* Profile Picture */
+  .profile-pic { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+  .profile-pic img {
+    width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+    border: 3px solid #a855f7;
+  }
+  .upload-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(124,58,237,0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    color: #fff;
+    font-size: 0.85rem;
+    transition: 0.3s;
+  }
+  .upload-btn:hover { background: linear-gradient(135deg,#7c3aed,#a855f7); }
+
+  /* Buttons */
+  .btn-primary {
+    background: linear-gradient(135deg,#7c3aed,#a855f7);
+    color: #fff; border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.7rem;
+    cursor: pointer; font-weight: 600; width: 100%;
+  }
+  .btn-secondary {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(124,58,237,0.3);
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.7rem; cursor: pointer;
+    font-weight: 600; width: 100%; color: #fff;
+  }
+  .btn-danger {
+    background: linear-gradient(135deg,#ef4444,#dc2626);
+    color: #fff; border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.7rem; cursor: pointer;
+    font-weight: 600; width: 100%;
+  }
+
+  /* Toggles */
+  .toggle-container {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.8rem; background: rgba(255,255,255,0.05);
+    border-radius: 0.6rem; margin-bottom: 0.8rem;
+  }
+  .toggle-switch { position: relative; width: 50px; height: 26px; }
+  .toggle-input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.2); border-radius: 34px; transition: 0.4s;
+  }
+  .toggle-slider:before {
+    content: ""; position: absolute; height: 20px; width: 20px;
+    left: 3px; bottom: 3px; background: #fff; border-radius: 50%;
+    transition: 0.4s;
+  }
+  .toggle-input:checked + .toggle-slider { background: linear-gradient(135deg,#7c3aed,#a855f7); }
+  .toggle-input:checked + .toggle-slider:before { transform: translateX(24px); }
+
+  /* Password Strength */
+  .password-strength { margin-top: 0.5rem; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+  .strength-bar { height: 100%; width: 0%; background: red; transition: width 0.3s; }
+  .strength-text { font-size: 0.8rem; margin-top: 0.3rem; }
+
+  /* Footer */
+  .footer { text-align: center; font-size: 0.9rem; opacity: 0.7; margin-top: 2rem; }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+  <h2>Phantom Recovery</h2>
+  <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+  <div class="nav-links" id="navLinks">
+    <a href="/dashboard" class="active">Dashboard</a>
+    <a href="/wallet">Wallet</a>
+    <a href="/profile">Profile</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1>⚙️ Settings</h1>
+    <p>Manage your account, wallets, and preferences</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('profile')">👤 Profile</div>
+      <div class="tab" onclick="showTab('wallets')">💼 Wallets</div>
+      <div class="tab" onclick="showTab('security')">🔒 Security</div>
+      <div class="tab" onclick="showTab('notifications')">🔔 Notifications</div>
+    </div>
+  </div>
+
+  <!-- Profile Tab -->
+  <div id="profile" class="tab-content active">
+    <div class="settings-grid">
+      <div class="setting-card">
+        <div class="card-header"><h3 class="card-title">Profile Info</h3></div>
+        <p class="card-description">Update your personal details and preferences</p>
+        
+        <div class="profile-pic">
+          <img src="https://via.placeholder.com/80" id="profileImage" alt="Profile Picture">
+          <input type="file" id="uploadPhoto" hidden>
+          <button class="upload-btn" onclick="document.getElementById('uploadPhoto').click()">Upload Photo</button>
+        </div>
+
+        <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" placeholder="John Doe"></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" placeholder="you@email.com"></div>
+        <div class="form-group"><label class="form-label">Preferred Language</label>
+          <select class="form-select">
+            <option>🌐 English</option>
+            <option>🇫🇷 French</option>
+            <option>🇪🇸 Spanish</option>
+            <option>🇩🇪 German</option>
+            <option>🇳🇬 Hausa</option>
+            <option>🇨🇳 Chinese</option>
+          </select>
+        </div>
+        <button class="btn-primary">Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wallets Tab -->
+  <div id="wallets" class="tab-content">
+    <div class="settings-grid">
+      <div class="setting-card">
+        <div class="card-header"><h3 class="card-title">Wallets</h3></div>
+        <p class="card-description">Manage your linked wallets</p>
+        <div class="form-group"><label class="form-label">Connected Wallet</label><input type="text" class="form-input" value="0xABCD...1234"></div>
+        <button class="btn-primary">Add New Wallet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Tab -->
+  <div id="security" class="tab-content">
+    <div class="settings-grid">
+      <div class="setting-card">
+        <div class="card-header"><h3 class="card-title">Change Password</h3></div>
+        <p class="card-description">Secure your account with a strong password</p>
+        <form onsubmit="updatePassword(event)">
+          <div class="form-group"><label class="form-label">Current Password</label><input type="password" class="form-input" placeholder="Enter current password"></div>
+          <div class="form-group"><label class="form-label">New Password</label>
+            <input type="password" class="form-input" id="newPassword" placeholder="Enter new password" oninput="checkPasswordStrength()">
+            <div class="password-strength"><div id="strengthBar" class="strength-bar"></div></div>
+            <div id="strengthText" class="strength-text"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Confirm Password</label><input type="password" class="form-input" placeholder="Re-enter new password"></div>
+          <button type="submit" class="btn-primary">Update Password</button>
+        </form>
+      </div>
+
+      <div class="setting-card">
+        <div class="card-header"><h3 class="card-title">Two-Factor Authentication</h3></div>
+        <p class="card-description">Add an extra layer of protection to your account</p>
+        <div class="toggle-container"><span>Enable 2FA</span>
+          <label class="toggle-switch"><input type="checkbox" class="toggle-input" id="toggle2FA"><span class="toggle-slider"></span></label>
+        </div>
+        <button class="btn-secondary">Setup 2FA</button>
+      </div>
+
+      <div class="setting-card">
+        <div class="card-header"><h3 class="card-title">Active Sessions</h3></div>
+        <div class="form-group">🖥️ Desktop • Active now <button class="btn-danger">✖</button></div>
+        <div class="form-group">📱 Mobile • 2 hours ago <button class="btn-danger">✖</button></div>
+        <button class="btn-danger">Logout All Sessions</button>
+      </div>
+
+      <div class="setting-card">
+        <div class="card-header"><h3 class="card-title">Recovery Options</h3></div>
+        <button class="btn-primary">Generate Recovery Codes</button>
+        <button class="btn-secondary" style="margin-top:0.5rem;">Setup Security Questions</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Tab -->
+  <div id="notifications" class="tab-content">
+    <div class="settings-grid">
+      <div class="setting-card">
+        <div class="card-header"><h3 class="card-title">Notifications</h3></div>
+        <div class="toggle-container"><span>Email Alerts</span><label class="toggle-switch"><input type="checkbox" class="toggle-input"><span class="toggle-slider"></span></label></div>
+        <div class="toggle-container"><span>Push Notifications</span><label class="toggle-switch"><input type="checkbox" class="toggle-input"><span class="toggle-slider"></span></label></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">© 2025 Phantom Recovery</div>
+</div>
+<script>
+  // ----------------------- CONFIG -----------------------
+  const userId = 1; // Replace with actual logged-in user ID (from session or token)
+  let uploadedImageFile = null;
+
+  // ----------------------- LANGUAGE PERSISTENCE ----------------
+  const languageSelect = document.getElementById("language");
+  const savedLang = localStorage.getItem("preferredLanguage");
+  if (savedLang) languageSelect.value = savedLang;
+
+  languageSelect.addEventListener("change", () => {
+    localStorage.setItem("preferredLanguage", languageSelect.value);
+  });
+
+  // ----------------------- MENU -------------------------
+  function toggleMenu() {
+    document.getElementById("navLinks").classList.toggle("show");
+  }
+
+  // ----------------------- TAB SWITCHING ----------------
+  function showTab(id) {
+    document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(tc => tc.classList.remove("active"));
+    document.querySelector(`[onclick="showTab('${id}')"]`).classList.add("active");
+    document.getElementById(id).classList.add("active");
+  }
+
+  // ----------------------- PROFILE IMAGE PREVIEW --------
+  document.getElementById("uploadPhoto").addEventListener("change", function(e) {
+    const reader = new FileReader();
+    reader.onload = function() {
+      document.getElementById("profileImage").src = reader.result;
+    };
+    reader.readAsDataURL(e.target.files[0]);
+    uploadedImageFile = e.target.files[0];
+  });
+
+  // ----------------------- LOAD PROFILE -----------------
+  async function loadUserProfile() {
+    try {
+      const res = await fetch(`/api/user/${userId}`);
+      const user = await res.json();
+
+      document.getElementById("fullName").value = user.username || "";
+      document.getElementById("email").value = user.email || "";
+
+      const lang = savedLang || user.language || "English";
+      document.getElementById("language").value = lang;
+      localStorage.setItem("preferredLanguage", lang);
+
+      if (user.profileImage)
+        document.getElementById("profileImage").src = user.profileImage;
+    } catch (err) {
+      console.error("Error loading profile:", err);
+    }
+  }
+
+  // ----------------------- SAVE PROFILE -----------------
+  async function saveProfile() {
+    try {
+      const name = document.getElementById("fullName").value;
+      const email = document.getElementById("email").value;
+      const language = document.getElementById("language").value;
+
+      const bodyData = { username: name, email, language };
+      localStorage.setItem("preferredLanguage", language);
+
+      if (uploadedImageFile) {
+        const reader = new FileReader();
+        reader.onload = async function() {
+          bodyData.profileImage = reader.result;
+          await patchProfile(bodyData);
+        };
+        reader.readAsDataURL(uploadedImageFile);
+      } else {
+        await patchProfile(bodyData);
+      }
+    } catch (err) {
+      console.error("Error saving profile:", err);
+      alert("❌ Failed to save profile.");
+    }
+  }
+
+  async function patchProfile(data) {
+    const res = await fetch(`/api/user/${userId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    alert(result.message || "✅ Profile updated successfully!");
+  }
+
+  // ----------------------- PASSWORD STRENGTH ------------
+  function checkPasswordStrength() {
+    const val = document.getElementById("newPassword").value;
+    const bar = document.getElementById("strengthBar");
+    const text = document.getElementById("strengthText");
+
+    let strength = 0;
+    if (val.length >= 6) strength++;
+    if (/[A-Z]/.test(val)) strength++;
+    if (/[0-9]/.test(val)) strength++;
+    if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+    const widths = ["25%", "50%", "75%", "100%"];
+    const colors = ["red", "orange", "gold", "limegreen"];
+    const labels = ["Weak", "Fair", "Good", "Strong"];
+
+    bar.style.width = widths[strength - 1] || "0%";
+    bar.style.background = colors[strength - 1] || "transparent";
+    text.innerText = labels[strength - 1] || "";
+  }
+
+  // ----------------------- UPDATE PASSWORD --------------
+  async function updatePassword(e) {
+    e.preventDefault();
+    const current = document.getElementById("currentPassword").value;
+    const newPass = document.getElementById("newPassword").value;
+    const confirm = document.getElementById("confirmPassword").value;
+
+    if (newPass !== confirm) {
+      alert("❌ Passwords do not match!");
+      return;
+    }
+
+    const res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: userId, current, password: newPass })
+    });
+
+    const data = await res.json();
+    alert(data.message || "✅ Password updated!");
+  }
+
+  // ----------------------- SOCKET.IO LIVE UPDATES ----------------
+  const socket = io("http://localhost:3000");
+
+  socket.on("profileUpdated", (data) => {
+    console.log("Live profile update:", data);
+    document.getElementById("fullName").value = data.username || "";
+    document.getElementById("email").value = data.email || "";
+    document.getElementById("language").value = data.language || "English";
+    if (data.profileImage) document.getElementById("profileImage").src = data.profileImage;
+
+    localStorage.setItem("preferredLanguage", data.language || "English");
+  });
+
+  socket.on("twoFAUpdated", (status) => {
+    document.getElementById("toggle2FA").checked = status;
+  });
+
+  // ----------------------- 2FA TOGGLE -------------------
+  document.getElementById("toggle2FA").addEventListener("change", async function() {
+    const res = await fetch("/api/admin/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ twoFA: this.checked })
+    });
+    const data = await res.json();
+    alert(this.checked ? "🔒 2FA Enabled!" : "⚠️ 2FA Disabled!");
+    socket.emit("twoFAUpdated", this.checked);
+  });
+
+  // ----------------------- INIT -------------------------
+  loadUserProfile();
+</script>
+</body>
+</html>

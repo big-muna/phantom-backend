@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
+    body {
+      background: #e0f2fe;
+      color:#0f172a;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+    }
+
+    .login-card {
+      background: #fff;
+      padding:2rem;
+      border-radius:1rem;
+      width:100%;
+      max-width:380px;
+      box-shadow:0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .login-card h2 {
+      text-align:center;
+      margin-bottom:1.5rem;
+      font-weight:600;
+      color:#0f172a;
+    }
+
+    .form-group {
+      margin-bottom:1rem;
+    }
+    .form-group label {
+      display:block;
+      margin-bottom:0.5rem;
+      font-size:0.9rem;
+      font-weight:500;
+      color:#1e3a8a;
+    }
+    .form-group input {
+      width:100%;
+      padding:0.8rem 1rem;
+      border-radius:0.6rem;
+      border:1px solid #cbd5e1;
+      background:#f8fafc;
+      color:#0f172a;
+      font-size:1rem;
+    }
+    .form-group input:focus {
+      border-color:#2563eb;
+      outline:none;
+      background:#fff;
+    }
+
+    .btn {
+      width:100%;
+      padding:0.9rem;
+      border:none;
+      border-radius:0.6rem;
+      background:#2563eb;
+      color:#fff;
+      font-weight:600;
+      cursor:pointer;
+      margin-top:0.5rem;
+      transition:0.3s;
+    }
+    .btn:hover {
+      background:#1d4ed8;
+    }
+
+    .extra {
+      display:flex;
+      justify-content:space-between;
+      font-size:0.85rem;
+      margin-top:0.8rem;
+    }
+    .extra a {
+      color:#2563eb;
+      text-decoration:none;
+    }
+    .extra a:hover { text-decoration:underline; }
+
+    .error {
+      margin-top:1rem;
+      color:#dc2626;
+      text-align:center;
+      font-size:0.9rem;
+      display:none;
+    }
+
+    @media(max-width:480px) {
+      .login-card { padding:1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <h2>🔑 Admin Login</h2>
+    
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email / Username</label>
+        <input type="text" id="username" placeholder="Enter email or username" required />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter password" required />
+      </div>
+      <button class="btn" type="submit">Login</button>
+      <div class="extra">
+        <a href="/adforget">Forgot password?</a>
+        <a href="#">Help</a>
+      </div>
+      <div class="error" id="loginError">Invalid username or password</div>
+    </form>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById("loginForm");
+    const loginError = document.getElementById("loginError");
+
+    loginForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+
+      // Change these credentials as needed
+      if(user === "admin@example.com" && pass === "AdminPass123"){
+        loginError.style.display = "none";
+        // Redirect to admin page
+        window.location.href = "/admin"; 
+      } else {
+        loginError.style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>

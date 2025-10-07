@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<style>
+/* ---------- Reset & Base ---------- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f7fa; color: #333; }
+
+/* ---------- Layout ---------- */
+.dashboard-container { display: flex; min-height: 100vh; }
+.sidebar { width: 260px; background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%); color: white; padding: 20px 0; position: fixed; height: 100vh; overflow-y: auto; box-shadow: 4px 0 10px rgba(0,0,0,0.1); transition: transform 0.3s; z-index: 100; }
+.sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-header h2 { font-size: 24px; margin-bottom: 5px; }
+.sidebar-header p { font-size: 12px; opacity: 0.8; }
+.sidebar-menu { margin-top: 20px; display: flex; flex-direction: column; }
+.menu-item { padding: 12px 20px; display: flex; align-items: center; cursor: pointer; transition: all 0.3s; color: rgba(255,255,255,0.8); text-decoration: none; }
+.menu-item:hover { background: rgba(255,255,255,0.1); color: white; }
+.menu-item.active { background: rgba(255,255,255,0.2); color: white; border-left: 4px solid #60a5fa; }
+.menu-item i { margin-right: 12px; width: 20px; text-align: center; }
+
+.main-content { flex: 1; margin-left: 260px; padding: 30px; transition: margin 0.3s; }
+
+.top-bar { background: white; padding: 20px 30px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.search-bar { display: flex; align-items: center; background: #f5f7fa; padding: 10px 15px; border-radius: 8px; flex: 1; max-width: 500px; }
+.search-bar input { border: none; background: transparent; outline: none; margin-left: 10px; flex: 1; font-size: 14px; }
+.user-info { display: flex; align-items: center; gap: 15px; }
+.notification-icon { position: relative; cursor: pointer; }
+.notification-badge { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+.user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+
+/* ---------- Stats Grid ---------- */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+.stat-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s, box-shadow 0.3s; }
+.stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+.stat-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; }
+.stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.stat-value { font-size: 32px; font-weight: bold; margin-bottom: 5px; }
+.stat-label { color: #6b7280; font-size: 14px; }
+.stat-change { font-size: 12px; margin-top: 10px; }
+.stat-change.positive { color: #10b981; }
+.stat-change.negative { color: #ef4444; }
+
+/* ---------- Content Sections ---------- */
+.content-section { display: none; }
+.content-section.active { display: block; }
+.section-title { font-size: 28px; font-weight: bold; margin-bottom: 20px; }
+
+/* ---------- Buttons ---------- */
+.btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+.btn-primary { background: #3b82f6; color: white; }
+.btn-primary:hover { background: #2563eb; }
+.btn-danger { background: #ef4444; color: white; }
+.btn-success { background: #10b981; color: white; }
+
+/* ---------- Table ---------- */
+.table-container { overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+table { width: 100%; border-collapse: collapse; }
+thead { background: #f9fafb; }
+th { padding: 15px 20px; text-align: left; font-size: 12px; text-transform: uppercase; color: #6b7280; font-weight: 600; }
+td { padding: 15px 20px; border-top: 1px solid #f3f4f6; }
+tbody tr:hover { background: #f9fafb; }
+.badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500; display: inline-block; }
+.badge-success { background: #d1fae5; color: #065f46; }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-danger { background: #fee2e2; color: #991b1b; }
+.action-buttons { display: flex; gap: 8px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+.sidebar { transform: translateX(-100%); position: fixed; top: 0; left: 0; height: 100%; width: 220px; z-index: 200; }
+.sidebar.mobile-open { transform: translateX(0); }
+.main-content { margin-left: 0; padding: 15px; }
+.stats-grid { grid-template-columns: 1fr; }
+.top-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+.table-container table { min-width: 100%; }
+.menu-toggle { display: flex; justify-content: flex-end; margin-bottom: 10px; cursor: pointer; color: #1e3a8a; font-size: 20px; }
+}
+
+/* ---------- Resend Code ---------- */
+#resendBtn { padding: 8px 15px; background: #3b82f6; color: #fff; border-radius: 6px; border: none; cursor: pointer; }
+#resendBtn:disabled { background: #94a3b8; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<div class="dashboard-container">
+        <!-- Mobile Menu Toggle -->
+    <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
+            <p>Management System v2.0</p>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="#" class="menu-item active" data-section="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="#" class="menu-item" data-section="users"><i class="fas fa-users"></i> User Management</a>
+            <a href="#" class="menu-item" data-section="wallets"><i class="fas fa-wallet"></i> Wallets & Transactions</a>
+            <a href="#" class="menu-item" data-section="security"><i class="fas fa-lock"></i> Security & Access</a>
+            <a href="#" class="menu-item" data-section="tickets"><i class="fas fa-ticket-alt"></i> Support Tickets</a>
+            <a href="#" class="menu-item" data-section="notifications"><i class="fas fa-bell"></i> Notifications</a>
+            <a href="#" class="menu-item" data-section="audit"><i class="fas fa-file-alt"></i> Audit Logs</a>
+            <a href="#" class="menu-item" data-section="settings"><i class="fas fa-cog"></i> System Settings</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search users, transactions, tickets...">
+            </div>
+            <div class="user-info">
+                <div class="notification-icon">
+                    <i class="fas fa-bell" style="font-size: 20px; color: #6b7280;"></i>
+                    <span class="notification-badge">5</span>
+                </div>
+                <div class="user-avatar">AD</div>
+                <div>
+                    <div style="font-weight: 600;">Admin User</div>
+                    <div style="font-size: 12px; color: #6b7280;">Super Admin</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sections -->
+        <section id="dashboard" class="content-section active">
+            <h1 class="section-title">Dashboard Overview</h1>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div><div class="stat-value">12,847</div><div class="stat-label">Total Users</div></div>
+                        <div class="stat-icon" style="background: #dbeafe; color: #3b82f6;"><i class="fas fa-users"></i></div>
+                    </div>
+                    <div class="stat-change positive"><i class="fas fa-arrow-up"></i> 12% from last month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div><div class="stat-value">8,432</div><div class="stat-label">Active Users</div></div>
+                        <div class="stat-icon" style="background: #d1fae5; color: #10b981;"><i class="fas fa-user-check"></i></div>
+                    </div>
+                    <div class="stat-change positive"><i class="fas fa-arrow-up"></i> 8% from last week</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sidebar link -->
+<a href="#" class="menu-item" data-section="userManagement">Users</a>
+
+<!-- User Management Section -->
+<section id="userManagement" class="content-section">
+    <h1 class="section-title">User Management</h1>
+    <button class="btn btn-primary"><i class="fas fa-download"></i> Export Users</button>
+
+    <div class="table-container" style="margin-top: 20px;">
+        <!-- Search input -->
+        <input type="text" id="userSearch" placeholder="Search users..." 
+               style="padding:10px; margin:15px 20px; width:calc(100% - 80px); border-radius:6px; border:1px solid #ddd;">
+
+        <!-- Users table -->
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Status</th>
+                    <th>Wallets</th>
+                    <th>Last Login</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Example static row; will be replaced dynamically by JS -->
+                <tr>
+                    <td>John Doe<br><small style="color:#6b7280;">john@example.com</small></td>
+                    <td><span class="badge badge-success">Active</span></td>
+                    <td>2</td>
+                    <td>Today 10:12AM</td>
+                    <td><button class="btn btn-primary resendBtn" data-email="john@example.com">Resend Code</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+        <!-- Placeholder sections for other menu items -->
+        <section id="wallets" class="content-section"><h1 class="section-title">Wallets & Transactions</h1></section>
+        <section id="security" class="content-section"><h1 class="section-title">Security & Access</h1></section>
+        <section id="tickets" class="content-section"><h1 class="section-title">Support Tickets</h1></section>
+        <section id="notifications" class="content-section"><h1 class="section-title">Notifications</h1></section>
+        <section id="audit" class="content-section"><h1 class="section-title">Audit Logs</h1></section>
+        <section id="settings" class="content-section"><h1 class="section-title">System Settings</h1></section>
+    </main>
+</div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const socket = io("http://localhost:3000"); // Connect to backend
+
+    // ---------------- Sidebar Navigation ----------------
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    const menuItems = document.querySelectorAll('.menu-item');
+    const sections = document.querySelectorAll('.content-section');
+
+    menuToggle?.addEventListener('click', () => sidebar.classList.toggle('mobile-open'));
+
+    menuItems.forEach(item => {
+        item.addEventListener('click', e => {
+            e.preventDefault();
+            menuItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            const target = item.dataset.section;
+            sections.forEach(s => s.classList.remove('active'));
+            const section = document.getElementById(target);
+            if(section) section.classList.add('active');
+            if(window.innerWidth <= 768) sidebar.classList.remove('mobile-open');
+        });
+    });
+
+    // ---------------- User Table Search ----------------
+    const userSearch = document.getElementById('userSearch');
+    if(userSearch) {
+        userSearch.addEventListener('keyup', () => {
+            const filter = userSearch.value.toLowerCase();
+            document.querySelectorAll('#userTable tbody tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
+            });
+        });
+    }
+
+    // ---------------- Load Users ----------------
+    async function loadUsers() {
+        try {
+            const token = localStorage.getItem('authToken');
+            const res = await fetch("http://localhost:3000/api/admin/users", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const users = await res.json();
+
+            const tbody = document.querySelector("#userTable tbody");
+            tbody.innerHTML = "";
+
+            users.forEach(u => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${u.first_name || u.name} ${u.last_name || ''}<br><small>${u.email}</small></td>
+                    <td><span class="badge ${u.active ? 'badge-success' : 'badge-danger'}">${u.active ? 'Active' : 'Inactive'}</span></td>
+                    <td>${u.wallets || 0}</td>
+                    <td>${u.last_login || u.lastLogin || '-'}</td>
+                    <td>
+                        <button class="btn btn-primary toggleStatusBtn" data-id="${u.id}">${u.active ? 'Deactivate' : 'Activate'}</button>
+                        <button class="btn btn-warning resetPasswordBtn" data-id="${u.id}">Reset Password</button>
+                        <button class="btn btn-info resendBtn" data-email="${u.email}">Resend Code</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            attachUserButtons(); // attach click events
+        } catch (err) {
+            console.error("Failed to load users:", err);
+        }
+    }
+
+    // ---------------- Attach Button Actions ----------------
+    function attachUserButtons() {
+        // Toggle Active/Inactive
+        document.querySelectorAll(".toggleStatusBtn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+                const token = localStorage.getItem('authToken');
+                await fetch(`http://localhost:3000/api/admin/users/${id}/toggle`, {
+                    method: "PATCH",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                await loadUsers(); // refresh table
+            });
+        });
+
+        // Reset Password
+        document.querySelectorAll(".resetPasswordBtn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.dataset.id;
+                const token = localStorage.getItem('authToken');
+                const res = await fetch(`http://localhost:3000/api/admin/users/${id}/reset`, {
+                    method: "PATCH",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                alert(`Temporary password: ${data.tempPassword}`);
+            });
+        });
+
+        // Resend Verification Code
+        document.querySelectorAll(".resendBtn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                btn.disabled = true;
+                btn.innerText = 'Sending...';
+                try {
+                    const res = await fetch('http://localhost:3000/api/send-code', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ userEmail: btn.dataset.email })
+                    });
+                    const data = await res.json();
+                    alert(data.message || 'Code sent!');
+                } catch(err) {
+                    alert('Failed to send code');
+                    console.error(err);
+                }
+
+                // Cooldown
+                let cooldown = 30;
+                const interval = setInterval(() => {
+                    cooldown--;
+                    btn.innerText = `Resend (${cooldown}s)`;
+                    if(cooldown === 0) {
+                        clearInterval(interval);
+                        btn.disabled = false;
+                        btn.innerText = 'Resend Code';
+                    }
+                }, 1000);
+            });
+        });
+    }
+
+    // ---------------- Socket.IO Live Updates ----------------
+    socket.on("initData", data => {
+        if(data.stats) {
+            const statCards = document.querySelectorAll('#dashboard .stat-card .stat-value');
+            if(statCards[0]) statCards[0].innerText = data.stats.totalUsers;
+            if(statCards[1]) statCards[1].innerText = data.stats.activeUsers;
+        }
+    });
+
+    socket.on("updateUsers", users => {
+        const tbody = document.querySelector('#userTable tbody');
+        tbody.innerHTML = '';
+        users.forEach(u => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${u.name || ''}<br><small style="color:#6b7280;">${u.email}</small></td>
+                <td><span class="badge ${u.active ? 'badge-success' : 'badge-danger'}">${u.active ? 'Active' : 'Inactive'}</span></td>
+                <td>${u.wallets || 0}</td>
+                <td>${u.lastLogin || '-'}</td>
+                <td><button class="btn btn-info resendBtn" data-email="${u.email}">Resend Code</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        attachUserButtons();
+    });
+
+    // ---------------- Support Messages ----------------
+    window.sendSupportMessage = msg => socket.emit('supportMessage', msg);
+    socket.on('supportReply', reply => alert(reply));
+
+    // ---------------- Wallet Management ----------------
+    window.addWallet = wallet => socket.emit('addWallet', wallet);
+    socket.on('wallets', wallets => console.log('Updated wallets:', wallets));
+
+    // Initial load
+    loadUsers();
+});
+</script>
+</body>
+</html>

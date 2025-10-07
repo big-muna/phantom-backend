@@ -186,6 +186,7 @@ function saveRecovery({ type, status, details, user }) {
 // ------------------------ PASSPORT STRATEGIES ------------------------
 // =====================================================================
 
+
 // ------------------------ GOOGLE STRATEGY ----------------------------
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -205,6 +206,14 @@ passport.use(new GoogleStrategy({
   }
   return done(null, user);
 }));
+
+// ------------------------ APPLE STRATEGY -----------------------------
+// Temporary placeholder to prevent errors
+passport.use('apple-placeholder', (req, done) => {
+  done(null, { id: 0, username: 'Guest', email: 'guest@example.com', role: 'client' });
+});
+
+
 
 // ------------------------ SERIALIZATION ------------------------------
 passport.serializeUser((user, done) => done(null, user.id));

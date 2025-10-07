@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phantom Recovery Analytics</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+/* ---------------- Reset & Base ---------------- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 2rem;
+  color: #f8fafc;
+  overflow-x: hidden;
+}
+.container { max-width: 1600px; margin: 0 auto; position: relative; z-index: 2; }
+
+/* ---------------- Header ---------------- */
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-top: 100px; /* Added to prevent navbar overlap */
+}
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  animation: fadeInDown 0.6s ease-out;
+}
+.subtitle {
+  opacity: 0.9;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ---------------- Filters ---------------- */
+.filters {
+  background: rgba(255,255,255,0.08); backdrop-filter: blur(15px);
+  border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem;
+  border: 1px solid rgba(124,58,237,0.2); display: flex; gap: 1rem; flex-wrap: wrap;
+  animation: slideIn 0.6s ease-out;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+.filter-group { flex: 1; min-width: 200px; }
+.filter-label { display: block; margin-bottom: 0.4rem; font-weight: 500; font-size: 0.9rem; color: #e0e7ff; }
+.filter-select, .filter-input {
+  width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(124,58,237,0.3);
+  border-radius: 0.6rem; padding: 0.7rem; color: #f8fafc; font-family: inherit; font-size: 0.95rem; transition: 0.3s;
+}
+.filter-select:focus, .filter-input:focus { outline: none; border-color: #a855f7; box-shadow: 0 0 15px rgba(168,85,247,0.5); }
+.filter-btn {
+  background: linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; border: none;
+  padding: 0.7rem 1.5rem; border-radius: 0.6rem; cursor: pointer; font-weight: 600; transition: 0.3s; align-self: flex-end;
+}
+.filter-btn:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(124,58,237,0.5); }
+
+/* ---------------- Stats Grid ---------------- */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+.stat-card {
+  background: rgba(255,255,255,0.08); backdrop-filter: blur(15px); border-radius: 1rem;
+  padding: 1.5rem; border: 1px solid rgba(124,58,237,0.2); position: relative; overflow: hidden;
+  transition: 0.4s; animation: scaleIn 0.6s ease-out; animation-fill-mode: backwards;
+}
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+.stat-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 20px 50px rgba(124,58,237,0.4); }
+.stat-icon { font-size: 2.5rem; margin-bottom: 0.5rem; display: inline-block; animation: bounce 2s ease-in-out infinite; }
+@keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.stat-value { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.3rem; color: #a855f7; }
+.stat-label { font-size: 0.95rem; opacity: 0.8; margin-bottom: 0.5rem; }
+.stat-change { display: inline-block; padding: 0.3rem 0.6rem; border-radius: 0.4rem; font-size: 0.85rem; font-weight: 600; }
+.stat-change.positive { background: rgba(16,185,129,0.2); color: #10b981; }
+.stat-change.negative { background: rgba(239,68,68,0.2); color: #ef4444; }
+.stat-bg-icon { position: absolute; bottom: -20px; right: -20px; font-size: 8rem; opacity: 0.05; transform: rotate(-15deg); }
+
+/* ---------------- Charts ---------------- */
+.charts-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+.chart-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(15px); border-radius: 1rem; padding: 1.5rem; border: 1px solid rgba(124,58,237,0.2); animation: fadeIn 0.8s ease-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.chart-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 1.5rem; color: #e0e7ff; }
+.chart-container { position: relative; height: 300px; }
+.line-chart { position: relative; height: 100%; display: flex; align-items: flex-end; gap: 0.5rem; padding: 1rem 0; }
+.line-point { flex: 1; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.3s; }
+.line-bar { width: 100%; background: linear-gradient(to top, #7c3aed, #a855f7); border-radius: 0.3rem 0.3rem 0 0; transition: 0.5s; position: relative; animation: growUp 1s ease-out; }
+@keyframes growUp { from { height: 0; } }
+.line-point:hover .line-bar { background: linear-gradient(to top, #a855f7, #c084fc); transform: scaleY(1.05); }
+.line-label { margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.7; }
+.line-value { position: absolute; top: -25px; font-size: 0.85rem; font-weight: 600; background: rgba(124,58,237,0.8); padding: 0.2rem 0.5rem; border-radius: 0.3rem; white-space: nowrap; opacity: 0; transition: 0.3s; }
+.line-point:hover .line-value { opacity: 1; }
+
+.bar-chart { display: flex; flex-direction: column; gap: 1rem; height: 100%; }
+.bar-item { display: flex; align-items: center; gap: 1rem; }
+.bar-label { min-width: 120px; font-size: 0.9rem; font-weight: 500; }
+.bar-container { flex: 1; height: 30px; background: rgba(255,255,255,0.1); border-radius: 0.5rem; overflow: hidden; position: relative; }
+.bar-fill { height: 100%; background: linear-gradient(90deg, #7c3aed, #a855f7); border-radius: 0.5rem; display: flex; align-items: center; justify-content: flex-end; padding: 0 0.5rem; font-size: 0.85rem; font-weight: 600; transition: width 1s ease-out; animation: expandWidth 1s ease-out; }
+@keyframes expandWidth { from { width: 0; } }
+
+/* ---------------- Performance ---------------- */
+.performance-section { margin-bottom: 2rem; }
+.section-title { font-size: 1.8rem; margin-bottom: 1rem; color: #e0e7ff; }
+.performance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+.performance-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(15px); border-radius: 1rem; padding: 1.5rem; border: 1px solid rgba(124,58,237,0.2); transition: 0.4s; position: relative; overflow: hidden; }
+.performance-card:hover { transform: translateY(-5px); box-shadow: 0 20px 50px rgba(124,58,237,0.4); }
+.performance-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #7c3aed, #a855f7); }
+.performance-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.performance-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: #c7d2fe; }
+.performance-value { font-size: 1.8rem; font-weight: 700; color: #a855f7; margin-bottom: 0.3rem; }
+.performance-description { font-size: 0.9rem; opacity: 0.8; }
+
+/* ---------------- Incidents ---------------- */
+.incidents-section { margin-bottom: 2rem; }
+.incidents-grid { display: grid; gap: 1rem; }
+.incident-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(15px); border-radius: 1rem; padding: 1.2rem; border: 1px solid rgba(124,58,237,0.2); transition: 0.4s; cursor: pointer; overflow: hidden; max-height: 80px; }
+.incident-card.expanded { max-height: 300px; }
+.incident-card:hover { border-color: #a855f7; box-shadow: 0 10px 30px rgba(124,58,237,0.3); }
+.incident-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+.incident-title { font-weight: 600; font-size: 1.1rem; }
+.incident-status { display: inline-block; padding: 0.3rem 0.7rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 600; }
+.incident-status.success { background: rgba(16,185,129,0.2); color: #10b981; }
+.incident-status.failure { background: rgba(239,68,68,0.2); color: #ef4444; }
+.incident-status.pending { background: rgba(245,158,11,0.2); color: #f59e0b; }
+.incident-details { font-size: 0.9rem; opacity: 0.8; line-height: 1.6; margin-top: 1rem; display: none; }
+.incident-card.expanded .incident-details { display: block; animation: fadeIn 0.4s ease-out; }
+.incident-meta { display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.7; }
+
+/* ---------------- Alerts ---------------- */
+.alert-notification {
+  position: fixed; top: 2rem; right: 2rem; background: rgba(239,68,68,0.95);
+  color: white; padding: 1rem 1.5rem; border-radius: 0.7rem; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  display: none; z-index: 1000; animation: slideInRight 0.4s ease-out; max-width: 350px; border-left: 4px solid #dc2626;
+}
+.alert-notification.show { display: block; }
+@keyframes slideInRight { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.alert-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.alert-title { font-weight: 700; font-size: 1.1rem; }
+.alert-close { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; opacity: 0.8; transition: 0.2s; }
+.alert-close:hover { opacity: 1; transform: rotate(90deg); }
+.alert-message { font-size: 0.9rem; opacity: 0.9; }
+
+
+/* ---------------- Navbar ---------------- */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; width: 100%;
+  background: rgba(0,0,0,0.2); backdrop-filter: blur(15px);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid rgba(124,58,237,0.3);
+  z-index: 999;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+.navbar .logo { font-weight: 700; font-size: 1.4rem; color: #e0e7ff; }
+.navbar .nav-links { display: flex; gap: 1.5rem; }
+.navbar .nav-links a {
+  color: #f8fafc;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.5rem;
+  transition: 0.3s;
+}
+.navbar .nav-links a:hover {
+  background: linear-gradient(135deg,#7c3aed,#a855f7);
+  box-shadow: 0 5px 20px rgba(124,58,237,0.4);
+}
+.navbar .hamburger { display: none; font-size: 1.5rem; cursor: pointer; color: #f8fafc; }
+
+@media (max-width: 768px) {
+  .navbar .nav-links { 
+    position: fixed; top: 60px; right: -100%;
+    flex-direction: column; background: rgba(0,0,0,0.8);
+    width: 200px; height: calc(100% - 60px);
+    padding: 2rem 1rem; gap: 1.5rem; transition: 0.3s;
+    border-left: 1px solid rgba(124,58,237,0.3);
+  }
+  .navbar .nav-links.active { right: 0; }
+  .navbar .hamburger { display: block; }
+}
+
+/* ---------------- Success Badge ---------------- */
+.success-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(16,185,129,0.2); border: 2px solid #10b981; padding: 0.5rem 1rem; border-radius: 2rem; font-weight: 600; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16,185,129,0); } }
+.badge-icon { font-size: 1.2rem; }
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 1024px) { .charts-section { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { 
+  body { padding: 1rem; } 
+  h1 { font-size: 1.8rem; } 
+  .stats-grid { grid-template-columns: 1fr; } 
+  .filters { flex-direction: column; } 
+  .filter-btn { align-self: stretch; } 
+  .performance-grid { grid-template-columns: 1fr; } 
+  .alert-notification { right: 1rem; left: 1rem; top: 1rem; } 
+}
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar">
+  <div class="logo">💰 Phantom Wallet</div>
+  <div class="hamburger" onclick="toggleNav()">☰</div>
+  <div class="nav-links" id="navLinks">
+    <a href="/dashboard">Dashboard</a>
+    <a href="/analytics">Analytics</a>
+    <a href="/profile">Profile</a>
+    <a href="/login">Logout</a>
+  </div>
+</nav>
+
+<!-- Alert Notification -->
+<div class="alert-notification" id="alertNotification">
+  <div class="alert-header">
+    <span class="alert-title">⚠️ Critical Alert</span>
+    <button class="alert-close" onclick="closeAlert()">×</button>
+  </div>
+  <div class="alert-message" id="alertMessage"></div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1>📊 Phantom Recovery Analytics</h1>
+    <p class="subtitle">Real-time recovery insights and performance metrics</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group">
+      <label class="filter-label">Date Range</label>
+      <select class="filter-select" id="dateRange" onchange="applyFilters()">
+        <option value="7">Last 7 Days</option>
+        <option value="30" selected>Last 30 Days</option>
+        <option value="90">Last 90 Days</option>
+        <option value="365">Last Year</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Recovery Type</label>
+      <select class="filter-select" id="recoveryType" onchange="applyFilters()">
+        <option value="all">All Types</option>
+        <option value="password">Password Recovery</option>
+        <option value="account">Account Recovery</option>
+        <option value="wallet">Wallet Recovery</option>
+        <option value="file">File Recovery</option>
+        <option value="key">Key Recovery</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">User Region</label>
+      <select class="filter-select" id="userRegion" onchange="applyFilters()">
+        <option value="all">All Regions</option>
+        <option value="na">North America</option>
+        <option value="eu">Europe</option>
+        <option value="asia">Asia</option>
+        <option value="africa">Africa</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <button class="filter-btn" onclick="resetFilters()">🔄 Reset</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <div class="stat-icon">📋</div>
+      <div class="stat-value" data-target="1247">0</div>
+      <div class="stat-label">Total Recovery Requests</div>
+      <span class="stat-change positive">↑ 12.5%</span>
+      <div class="stat-bg-icon">📋</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-value" data-target="1089">0</div>
+      <div class="stat-label">Successful Recoveries</div>
+      <span class="stat-change positive">↑ 8.3%</span>
+      <div class="stat-bg-icon">✅</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">❌</div>
+      <div class="stat-value" data-target="87">0</div>
+      <div class="stat-label">Failed Recoveries</div>
+      <span class="stat-change negative">↓ 3.2%</span>
+      <div class="stat-bg-icon">❌</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⏱️</div>
+      <div class="stat-value" data-target="4.2">0</div>
+      <div class="stat-label">Avg Recovery Time (hours)</div>
+      <span class="stat-change positive">↓ 15.7%</span>
+      <div class="stat-bg-icon">⏱️</div>
+    </div>
+  </div>
+
+  <!-- Success Badge -->
+  <div style="text-align:center;margin-bottom:2rem;">
+    <div class="success-badge">
+      <span class="badge-icon">🎯</span>
+      <span>Success Rate: <strong id="successRate">87.3%</strong></span>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-section">
+    <div class="chart-card">
+      <h3 class="chart-title">📈 Recovery Trends (Last 7 Days)</h3>
+      <div class="chart-container"><div class="line-chart" id="lineChart"></div></div>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-title">📊 Recovery by Category</h3>
+      <div class="chart-container"><div class="bar-chart" id="barChart"></div></div>
+    </div>
+  </div>
+
+  <!-- Performance -->
+  <div class="performance-section">
+    <h2 class="section-title">🏆 Performance Highlights</h2>
+    <div class="performance-grid">
+      <div class="performance-card">
+        <div class="performance-icon">👤</div>
+        <div class="performance-title">Top User</div>
+        <div class="performance-value">john_crypto</div>
+        <div class="performance-description">15 successful recoveries this month</div>
+      </div>
+      <div class="performance-card">
+        <div class="performance-icon">⚡</div>
+        <div class="performance-title">Fastest Recovery</div>
+        <div class="performance-value">12 min</div>
+        <div class="performance-description">Wallet recovery completed in record time</div>
+      </div>
+      <div class="performance-card">
+        <div class="performance-icon">🔥</div>
+        <div class="performance-title">Most Frequent Type</div>
+        <div class="performance-value">Password</div>
+        <div class="performance-description">45% of all recovery requests</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incidents -->
+  <div class="incidents-section">
+    <h2 class="section-title">🔔 Recent Recovery Incidents</h2>
+    <div class="incidents-grid" id="incidentsGrid"></div>
+  </div>
+</div>
+
+<script>
+/* ---------------- Navbar ---------------- */
+function toggleNav() {
+  document.getElementById('navLinks').classList.toggle('active');
+}
+
+/* ---------------- Alerts ---------------- */
+function showAlert(message) {
+  const alertBox = document.getElementById('alertNotification');
+  const alertMsg = document.getElementById('alertMessage');
+  alertMsg.textContent = message;
+  alertBox.classList.add('show');
+  setTimeout(() => alertBox.classList.remove('show'), 5000);
+}
+function closeAlert() {
+  document.getElementById('alertNotification').classList.remove('show');
+}
+
+/* ---------------- Counters ---------------- */
+function animateCounter(el, target, duration = 2000) {
+  let start = 0, increment = target / (duration / 16), current = start;
+  const timer = setInterval(() => {
+    current += increment;
+    if (current >= target) {
+      el.textContent = target % 1 === 0 ? target : target.toFixed(1);
+      clearInterval(timer);
+    } else el.textContent = Math.floor(current);
+  }, 16);
+}
+
+function updateCounters(data) {
+  document.querySelector('.stat-value[data-target="1247"]').textContent = data.totalRequests;
+  document.querySelector('.stat-value[data-target="1089"]').textContent = data.successful;
+  document.querySelector('.stat-value[data-target="87"]').textContent = data.failed;
+  document.querySelector('.stat-value[data-target="4.2"]').textContent = data.avgTime;
+  document.getElementById('successRate').textContent = data.successRate + '%';
+}
+
+/* ---------------- Line Chart ---------------- */
+function updateLineChart(lineChartData) {
+  const container = document.getElementById('lineChart');
+  const maxValue = Math.max(...lineChartData.map(d => d.requests));
+  container.innerHTML = lineChartData.map(item => `
+    <div class="line-point">
+      <div class="line-bar" style="height:${(item.requests / maxValue) * 100}%;">
+        <div class="line-value">${item.requests} requests<br>${item.success} success</div>
+      </div>
+      <div class="line-label">${item.label}</div>
+    </div>`).join('');
+}
+
+/* ---------------- Bar Chart ---------------- */
+function updateBarChart(barChartData) {
+  const container = document.getElementById('barChart');
+  container.innerHTML = barChartData.map(item => `
+    <div class="bar-item">
+      <div class="bar-label">${item.label}</div>
+      <div class="bar-container"><div class="bar-fill" style="width:${item.percent}%">${item.value}</div></div>
+    </div>`).join('');
+}
+
+/* ---------------- Incidents ---------------- */
+function updateIncidents(incidentsData) {
+  const container = document.getElementById('incidentsGrid');
+  container.innerHTML = incidentsData.map(i => `
+    <div class="incident-card" id="incident-${i.id}" onclick="toggleIncident(${i.id})">
+      <div class="incident-header">
+        <div class="incident-title">${i.title}</div>
+        <span class="incident-status ${i.status}">${i.status.toUpperCase()}</span>
+      </div>
+      <div class="incident-details">
+        <div><strong>Type:</strong> ${i.type}</div>
+        <div><strong>Duration:</strong> ${i.duration}</div>
+        <div>${i.details}</div>
+        <div class="incident-meta"><div><strong>Reported:</strong> ${i.time}</div></div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleIncident(id) {
+  document.getElementById(`incident-${id}`).classList.toggle('expanded');
+}
+
+/* ---------------- Fetch initial data ---------------- */
+async function fetchData() {
+  try {
+    const res = await fetch('http://localhost:3000/api/stats');
+    const data = await res.json();
+
+    updateCounters(data);
+    updateLineChart(data.lineChart);
+    updateBarChart(data.barChart);
+    updateIncidents(data.incidents);
+
+  } catch (err) {
+    console.error(err);
+    showAlert('Failed to fetch live data!');
+  }
+}
+
+/* ---------------- Socket.IO real-time updates ---------------- */
+const socket = io('http://localhost:3000');
+
+socket.on('connect', () => console.log('Connected to server via Socket.IO'));
+
+socket.on('statsUpdate', data => {
+  updateCounters(data);
+  updateLineChart(data.lineChart);
+  updateBarChart(data.barChart);
+  updateIncidents(data.incidents);
+});
+
+/* ---------------- Filters ---------------- */
+function resetFilters() {
+  document.getElementById('dateRange').value = '30';
+  document.getElementById('recoveryType').value = 'all';
+  document.getElementById('userRegion').value = 'all';
+  applyFilters();
+}
+
+function applyFilters() {
+  showAlert('Filters applied (demo).');
+}
+
+/* ---------------- Initialize ---------------- */
+fetchData(); // load initial data
+</script>
+</body>
+</html>
