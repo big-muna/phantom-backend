@@ -182,10 +182,6 @@ function saveRecovery({ type, status, details, user }) {
 // ------------------------ PASSPORT STRATEGIES ------------------------
 // =====================================================================
 
-const AppleStrategy = require("passport-apple");
-const InstagramStrategy = require("passport-instagram").Strategy;
-const FacebookStrategy = require("passport-facebook").Strategy;
-
 // ------------------------ GOOGLE STRATEGY ----------------------------
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
