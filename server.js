@@ -316,28 +316,29 @@ app.post("/api/register", async (req, res) => {
   }
 
   try {
+    // Check if user exists
     const existingUser = await pool.query(
-      "SELECT * FROM users WHERE email = $1", 
+      "SELECT * FROM users WHERE LOWER(email) = LOWER($1)",
       [email]
     );
-    
     if (existingUser.rows.length > 0) {
       return res.status(400).json({ message: "Email already registered" });
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = {
-      id: users.length + 1,
-      username: firstName,
-      lastName,
-      email,
-      password: hashedPassword,
-      role: "client",
-      active: true
-    };
-    users.push(newUser);
-    logAction("USER_REGISTER", { email, id: newUser.id });
 
+    // Insert into database
+    const newUserResult = await pool.query(
+      `INSERT INTO users (first_name, last_name, email, password, role, active)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, email`,
+      [firstName, lastName, email, hashedPassword, "client", true]
+    );
+    const newUser = newUserResult.rows[0];
+
+    // Log and send welcome email
+    logAction("USER_REGISTER", { email, id: newUser.id });
     await sendMail({
       to: email,
       subject: "Welcome to Phantom Recovery",
@@ -347,10 +348,10 @@ app.post("/api/register", async (req, res) => {
     console.log(`✅ New user registered: ${email}`);
 
     res.status(201).json({
-    success: true,
-    message: "Account created successfully",
-    userId: newUser.id,
- });
+      success: true,
+      message: "Account created successfully",
+      userId: newUser.id,
+    });
 
   } catch (err) {
     console.error(err);
@@ -367,6 +368,7 @@ app.post("/api/login", async (req, res) => {
   }
 
   try {
+    // Query user from database
     const result = await pool.query(
       "SELECT * FROM users WHERE LOWER(email) = LOWER($1)",
       [email]
@@ -381,11 +383,13 @@ app.post("/api/login", async (req, res) => {
       return res.status(400).json({ message: "Password not set for this account" });
     }
 
+    // Compare password
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
+    // Generate JWT
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
@@ -402,11 +406,13 @@ app.post("/api/login", async (req, res) => {
       userId: user.id,
       role: user.role,
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Login failed" });
   }
 });
+
 
 // =====================================================================
 // ------------------------ USER PROFILE & PREFERENCES ----------------
