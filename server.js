@@ -177,6 +177,17 @@ function saveRecovery({ type, status, details, user }) {
   return entry;
 }
 
+app.get("/api/test-db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.json({ success: true, now: result.rows[0] });
+  } catch (err) {
+    console.error("DB test error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+
 
 // =====================================================================
 // ------------------------ PASSPORT STRATEGIES ------------------------
