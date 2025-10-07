@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phantom Recovery - Create Account</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* ---------------- Reset & Base ---------------- */
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  height: 100%;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  color:#f8fafc;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+body { padding: 2rem; position: relative; }
+
+/* ---------------- Animated Background ---------------- */
+.bg-animation{position:fixed;inset:0;z-index:0;pointer-events: none;}
+.floating-shape{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.3;animation:float 20s infinite ease-in-out;}
+.shape1{width:400px;height:400px;background:radial-gradient(circle, rgba(124,58,237,0.4), transparent);top:-200px;left:-200px;}
+.shape2{width:350px;height:350px;background:radial-gradient(circle, rgba(236,72,153,0.4), transparent);bottom:-150px;right:-150px;}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(30px,-30px) scale(1.1);}66%{transform:translate(-20px,20px) scale(0.9);}}
+
+/* ---------------- Register Container ---------------- */
+.register-container{
+  position:relative;
+  z-index:2;
+  max-width:550px;
+  width:100%;
+  margin: 0 auto;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(20px);
+  border:1px solid rgba(124,58,237,0.3);
+  border-radius:1.5rem;
+  padding:3rem 2.5rem;
+  box-shadow:0 20px 60px rgba(0,0,0,0.4);
+  animation:slideIn 0.8s ease;
+}
+@keyframes slideIn{from{opacity:0; transform:translateY(30px);}to{opacity:1; transform:translateY(0);}}
+
+.register-header{text-align:center;margin-bottom:2rem;}
+.register-title{
+  font-size:2.5rem;font-weight:700;margin-bottom:0.5rem;
+  background: linear-gradient(135deg,#7c3aed,#a855f7,#ec4899);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text; animation: gradientFlow 3s infinite; background-size:200% 200%;
+}
+@keyframes gradientFlow{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+.register-subtitle{color:#94a3b8;font-size:1rem;}
+
+/* ---------------- Form Styles ---------------- */
+.form-group{margin-bottom:1.5rem;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.form-label{display:block;margin-bottom:0.5rem;color:#cbd5e1;font-weight:500;font-size:0.9rem;}
+.form-label span{color:#ef4444;}
+.input-wrapper{position:relative;}
+.input-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:1.1rem;}
+.form-input{
+  width:100%;padding:1rem 1rem 1rem 3rem;
+  background: rgba(255,255,255,0.2);
+  border:1px solid rgba(124,58,237,0.3);
+  border-radius:0.5rem;color:#f8fafc;font-size:1rem;
+  transition: all 0.3s ease;
+}
+.form-input:focus{outline:none;border-color:#a855f7;box-shadow:0 0 20px rgba(168,85,247,0.3);background: rgba(255,255,255,0.25);}
+.form-input.error{border-color:#ef4444;}
+.form-input.success{border-color:#10b981;}
+.password-toggle{position:absolute;right:1rem;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1.1rem;transition: color 0.3s;}
+.password-toggle:hover{color:#a855f7;}
+.password-strength{margin-top:0.5rem;height:4px;background:rgba(148,163,184,0.2);border-radius:2px;overflow:hidden;display:none;}
+.password-strength.show{display:block;}
+.strength-bar{height:100%;width:0%;transition: all 0.3s ease;border-radius:2px;}
+.strength-weak{width:33%;background:#ef4444;}
+.strength-medium{width:66%;background:#f59e0b;}
+.strength-strong{width:100%;background:#10b981;}
+.strength-text{font-size:0.8rem;margin-top:0.3rem;color:#94a3b8;}
+.error-message{color:#ef4444;font-size:0.85rem;margin-top:0.3rem;display:none;}
+.error-message.show{display:block;animation:shake 0.3s;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+/* ---------------- Success Modal ---------------- */
+.success-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 10;
+  justify-content: center;
+  align-items: center;
+}
+.success-modal.show { display: flex; }
+.success-content {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(15px);
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+  color: #f8fafc;
+}
+.success-icon { font-size:3rem; margin-bottom:1rem; color:#10b981; }
+.success-btn {
+  margin-top:1rem;
+  padding:0.75rem 2rem;
+  border:none;
+  border-radius:0.5rem;
+  background:#7c3aed;
+  color:#fff;
+  cursor:pointer;
+}
+.success-btn:hover{background:#a855f7;}
+
+/* ---------------- Buttons & Social ---------------- */
+.submit-btn{
+  width:100%; padding:1rem;
+  border:none; border-radius:0.5rem;
+  background:#7c3aed; color:#fff; font-size:1rem; cursor:pointer;
+  transition: all 0.3s ease;
+}
+.submit-btn:hover{background:#a855f7;}
+.social-buttons{
+  display:flex; justify-content:space-between; margin-top:1rem;
+}
+.social-btn{
+  flex:1; margin:0 0.25rem;
+  padding:0.75rem 0; border-radius:0.5rem;
+  color:#fff; text-align:center; text-decoration:none; font-size:1.2rem;
+  transition:all 0.3s;
+}
+.social-btn.google{background:#db4437;}
+.social-btn.facebook{background:#3b5998;}
+.social-btn.instagram{background:#e4405f;}
+.social-btn.apple{background:#000;}
+.social-btn:hover{opacity:0.8;}
+.social-divider{margin:1.5rem 0; text-align:center; color:#94a3b8;}
+.login-link{text-align:center; margin-top:1rem; color:#94a3b8;}
+.login-link a{color:#7c3aed; text-decoration:none;}
+.login-link a:hover{text-decoration:underline;}
+
+/* ---------------- Mobile Responsiveness ---------------- */
+@media (max-width: 480px) {
+  body {
+    padding: 1rem;
+  }
+
+  .register-container {
+    max-width: 100%;
+    padding: 2rem 1.5rem;
+    margin: 1rem auto;
+    border-radius: 1rem;
+  }
+
+  .register-title {
+    font-size: 2rem;
+  }
+
+  .register-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .form-label {
+    font-size: 0.85rem;
+  }
+
+  .form-input {
+    font-size: 0.95rem;
+    padding: 0.8rem 0.8rem 0.8rem 2.5rem;
+  }
+
+  .input-icon {
+    font-size: 1rem;
+    left: 0.8rem;
+  }
+
+  .password-toggle {
+    font-size: 1rem;
+    right: 0.8rem;
+  }
+
+  .submit-btn {
+    font-size: 0.95rem;
+    padding: 0.85rem;
+  }
+
+  .social-btn {
+    font-size: 1rem;
+    padding: 0.6rem 0;
+  }
+
+  .success-content {
+    padding: 1.5rem;
+  }
+
+  .success-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<div class="bg-animation">
+  <div class="floating-shape shape1"></div>
+  <div class="floating-shape shape2"></div>
+</div>
+
+<div class="register-container">
+  <div class="register-header">
+    <h1 class="register-title">Create Account</h1>
+    <p class="register-subtitle">Join Phantom Recovery and secure your crypto assets</p>
+  </div>
+
+  <form id="registerForm">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">First Name <span>*</span></label>
+        <div class="input-wrapper">
+          <i class="fas fa-user input-icon"></i>
+          <input type="text" class="form-input" id="firstName" placeholder="John" required>
+        </div>
+        <div class="error-message" id="firstNameError">First name is required</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name <span>*</span></label>
+        <div class="input-wrapper">
+          <i class="fas fa-user input-icon"></i>
+          <input type="text" class="form-input" id="lastName" placeholder="Doe" required>
+        </div>
+        <div class="error-message" id="lastNameError">Last name is required</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Email Address <span>*</span></label>
+      <div class="input-wrapper">
+        <i class="fas fa-envelope input-icon"></i>
+        <input type="email" class="form-input" id="email" placeholder="john.doe@example.com" required>
+      </div>
+      <div class="error-message" id="emailError">Please enter a valid email address</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Password <span>*</span></label>
+      <div class="input-wrapper">
+        <i class="fas fa-lock input-icon"></i>
+        <input type="password" class="form-input" id="password" placeholder="Enter password" required>
+        <button type="button" class="password-toggle" id="togglePassword"><i class="fas fa-eye"></i></button>
+      </div>
+      <div class="password-strength" id="passwordStrength"><div class="strength-bar" id="strengthBar"></div></div>
+      <div class="strength-text" id="strengthText"></div>
+      <div class="error-message" id="passwordError">Password must be 8+ chars, uppercase, number & special char</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Confirm Password <span>*</span></label>
+      <div class="input-wrapper">
+        <i class="fas fa-lock input-icon"></i>
+        <input type="password" class="form-input" id="confirmPassword" placeholder="Confirm password" required>
+        <button type="button" class="password-toggle" id="toggleConfirmPassword"><i class="fas fa-eye"></i></button>
+      </div>
+      <div class="error-message" id="confirmPasswordError">Passwords do not match</div>
+    </div>
+
+    <div class="form-group">
+      <input type="checkbox" id="captcha" required> I'm not a robot
+    </div>
+    <div class="form-group">
+      <input type="checkbox" id="terms" required> I agree to <a href="#">Terms & Conditions</a>
+    </div>
+
+    <button type="submit" class="submit-btn" id="submitBtn"><i class="fas fa-user-plus"></i> Create Account</button>
+
+    <div class="social-divider"><span>Or register with</span></div>
+    <div class="social-buttons">
+      <a href="#" class="social-btn google"><i class="fab fa-google"></i></a>
+      <a href="#" class="social-btn facebook"><i class="fab fa-facebook-f"></i></a>
+      <a href="#" class="social-btn instagram"><i class="fab fa-instagram"></i></a>
+      <a href="#" class="social-btn apple"><i class="fab fa-apple"></i></a>
+    </div>
+
+    <div class="login-link">Already have an account? <a href="login.html">Login here</a></div>
+  </form>
+</div>
+
+<div class="success-modal" id="successModal">
+  <div class="success-content">
+    <div class="success-icon"><i class="fas fa-check"></i></div>
+    <h3>Account Created!</h3>
+    <p>Your account has been successfully created. Welcome to Phantom Recovery!</p>
+    <button class="success-btn" onclick="closeModal()">Get Started</button>
+  </div>
+</div>
+
+<script>
+// ===================== PASSWORD TOGGLE =====================
+function togglePassword(id, toggleId) {
+  const input = document.getElementById(id);
+  const icon = document.getElementById(toggleId).querySelector("i");
+  if (input.type === "password") {
+    input.type = "text";
+    icon.classList.replace("fa-eye", "fa-eye-slash");
+  } else {
+    input.type = "password";
+    icon.classList.replace("fa-eye-slash", "fa-eye");
+  }
+}
+
+document.getElementById("togglePassword").addEventListener("click", () =>
+  togglePassword("password", "togglePassword")
+);
+document.getElementById("toggleConfirmPassword").addEventListener("click", () =>
+  togglePassword("confirmPassword", "toggleConfirmPassword")
+);
+
+// ===================== PASSWORD STRENGTH =====================
+const passwordInput = document.getElementById("password");
+const strengthBar = document.getElementById("strengthBar");
+const strengthText = document.getElementById("strengthText");
+const passwordStrength = document.getElementById("passwordStrength");
+
+passwordInput.addEventListener("input", function () {
+  const val = this.value;
+  let strength = 0;
+  if (val.length > 0) {
+    passwordStrength.classList.add("show");
+    if (val.length >= 8) strength++;
+    if (/[a-z]/.test(val) && /[A-Z]/.test(val)) strength++;
+    if (/\d/.test(val)) strength++;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(val)) strength++;
+    strengthBar.className = "strength-bar";
+    if (strength <= 2) {
+      strengthBar.classList.add("strength-weak");
+      strengthText.textContent = "Weak password";
+      strengthText.style.color = "#ef4444";
+    } else if (strength === 3) {
+      strengthBar.classList.add("strength-medium");
+      strengthText.textContent = "Medium password";
+      strengthText.style.color = "#f59e0b";
+    } else {
+      strengthBar.classList.add("strength-strong");
+      strengthText.textContent = "Strong password";
+      strengthText.style.color = "#10b981";
+    }
+  } else {
+    passwordStrength.classList.remove("show");
+    strengthText.textContent = "";
+  }
+});
+
+// ===================== FIELD VALIDATION =====================
+const form = document.getElementById("registerForm");
+const inputs = form.querySelectorAll(".form-input");
+
+function validateField(field) {
+  const errorEl = document.getElementById(field.id + "Error");
+  let valid = true;
+
+  if (field.hasAttribute("required") && field.value.trim() === "") valid = false;
+
+  if (field.id === "email" && field.value) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!re.test(field.value)) valid = false;
+  }
+
+  if (field.id === "password") {
+    const re =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+    if (!re.test(field.value)) valid = false;
+  }
+
+  if (field.id === "confirmPassword") {
+    const pw = document.getElementById("password").value;
+    if (field.value !== pw) valid = false;
+  }
+
+  if (valid) {
+    field.classList.remove("error");
+    field.classList.add("success");
+    if (errorEl) errorEl.classList.remove("show");
+  } else {
+    field.classList.remove("success");
+    field.classList.add("error");
+    if (errorEl) errorEl.classList.add("show");
+  }
+
+  return valid;
+}
+
+inputs.forEach((input) => {
+  input.addEventListener("blur", () => validateField(input));
+  input.addEventListener("input", () => {
+    if (input.classList.contains("error")) validateField(input);
+  });
+});
+
+// ===================== FORM SUBMISSION =====================
+form.addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+  let valid = true;
+  inputs.forEach((input) => {
+    if (!validateField(input)) valid = false;
+  });
+
+  const terms = document.getElementById("terms");
+  const captcha = document.getElementById("captcha");
+
+  if (!terms.checked) {
+    alert("Please accept Terms & Conditions");
+    valid = false;
+  }
+  if (!captcha.checked) {
+    alert("Please verify you are not a robot");
+    valid = false;
+  }
+
+  if (valid) {
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+
+    const firstName = document.getElementById("firstName").value.trim();
+    const lastName = document.getElementById("lastName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    try {
+      // ✅ Always include full URL when testing locally
+      const res = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firstName, lastName, email, password }),
+      });
+
+      const data = await res.json();
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+
+      if (res.ok && data.success) {
+        document.getElementById("successModal").classList.add("show");
+        form.reset();
+        inputs.forEach((i) => i.classList.remove("success", "error"));
+        passwordStrength.classList.remove("show");
+
+        // ✅ Redirect to login after short delay
+        setTimeout(() => {
+          window.location.href = "/login.html";
+        }, 2500);
+      } else {
+        alert("❌ " + (data.message || "Failed to create account"));
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+      alert("⚠️ Network error. Please try again.");
+      console.error("Registration error:", err);
+    }
+  }
+});
+
+function closeModal() {
+  document.getElementById("successModal").classList.remove("show");
+}
+
+// ===================== SOCIAL LOGIN BUTTONS =====================
+document.querySelectorAll(".social-btn").forEach((btn) => {
+  btn.addEventListener("click", function (e) {
+    e.preventDefault();
+    const platform = btn.classList.contains("google")
+      ? "Google"
+      : btn.classList.contains("facebook")
+      ? "Facebook"
+      : btn.classList.contains("instagram")
+      ? "Instagram"
+      : "Apple";
+    alert(`Redirecting to ${platform} authentication...`);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phantom Recovery - Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* ---------------- Reset & Base ---------------- */
+* {margin:0; padding:0; box-sizing:border-box;}
+body, html {height:100%; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#0f172a,#1e1b4b); color:#f8fafc; overflow-x:hidden;}
+
+/* ---------------- Animated Background ---------------- */
+.bg-animation{position:fixed; inset:0; z-index:0;}
+.floating-shape{position:absolute; border-radius:50%; filter:blur(120px); opacity:0.25; animation:float 30s infinite ease-in-out;}
+.shape1{width:550px;height:550px;background:radial-gradient(circle, rgba(124,58,237,0.5), transparent);top:-300px;left:-300px;}
+.shape2{width:500px;height:500px;background:radial-gradient(circle, rgba(236,72,153,0.5), transparent);bottom:-250px;right:-250px;}
+.shape3{width:350px;height:350px;background:radial-gradient(circle, rgba(34,197,94,0.5), transparent);top:50%; left:65%;}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(40px,-40px) scale(1.1);}66%{transform:translate(-30px,30px) scale(0.9);}}
+
+/* ---------------- Sidebar ---------------- */
+.sidebar{position:fixed; left:0; top:0; width:260px; height:100vh; background: rgba(30,41,59,0.8); backdrop-filter:blur(20px); border-right:1px solid rgba(124,58,237,0.2); padding:1.5rem; z-index:2; transition: transform 0.3s ease;}
+.sidebar.closed{transform:translateX(-260px);}
+.logo{font-size:1.5rem; font-weight:700; background: linear-gradient(135deg,#7c3aed,#a855f7,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:2rem; display:flex; align-items:center; gap:0.5rem;}
+.nav-menu{list-style:none;}
+.nav-item{margin-bottom:0.5rem;}
+.nav-link{display:flex; align-items:center; gap:0.8rem; padding:0.8rem 1rem; color:#94a3b8; text-decoration:none; border-radius:0.5rem; transition:0.3s;}
+.nav-link:hover, .nav-link.active{background: rgba(124,58,237,0.15); color:#a855f7;}
+.nav-link i{width:20px; font-size:1.1rem;}
+
+/* ---------------- Main Content ---------------- */
+.main-content{margin-left:260px; padding:2rem; transition: margin-left 0.3s ease; position:relative; z-index:1;}
+.main-content.expanded{margin-left:0;}
+
+/* ---------------- Top Bar ---------------- */
+.top-bar{display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem;}
+.menu-toggle{display:none; background: rgba(124,58,237,0.2); border:none; color:#f8fafc; width:40px; height:40px; border-radius:0.5rem; cursor:pointer; font-size:1.2rem; transition:0.3s;}
+.menu-toggle:hover{background: rgba(124,58,237,0.3);}
+.welcome-text h1{font-size:1.8rem; margin-bottom:0.3rem;}
+.welcome-text p{color:#94a3b8; font-size:0.95rem;}
+.top-actions{display:flex; gap:1rem; align-items:center;}
+.search-box{display:flex; align-items:center; background: rgba(255,255,255,0.05); border:1px solid rgba(124,58,237,0.2); border-radius:0.5rem; padding:0.6rem 1rem; gap:0.5rem; min-width:250px;}
+.search-box input{background:none; border:none; color:#f8fafc; outline:none; width:100%;}
+.icon-btn{position:relative; background: rgba(255,255,255,0.05); border:1px solid rgba(124,58,237,0.2); border-radius:0.5rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:0.3s; color:#f8fafc;}
+.icon-btn:hover{background: rgba(124,58,237,0.2); border-color:#7c3aed;}
+.badge{position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; font-size:0.7rem; padding:0.2rem 0.4rem; border-radius:1rem; font-weight:600;}
+
+/* ---------------- Stats Grid ---------------- */
+.stats-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.5rem; margin-bottom:2rem;}
+.stat-card{background: rgba(255,255,255,0.08); backdrop-filter: blur(30px); border-radius:1.2rem; padding:1.5rem; text-align:center; transition:0.4s;}
+.stat-card:hover{transform:translateY(-5px) scale(1.03); box-shadow:0 25px 60px rgba(0,0,0,0.4);}
+.stat-header{display:flex; justify-content:center; align-items:center; margin-bottom:1rem;}
+.stat-icon{width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem;}
+.stat-icon.primary{background: rgba(124,58,237,0.2); color:#a855f7;}
+.stat-icon.success{background: rgba(16,185,129,0.2); color:#10b981;}
+.stat-icon.warning{background: rgba(245,158,11,0.2); color:#f59e0b;}
+.stat-icon.danger{background: rgba(239,68,68,0.2); color:#ef4444;}
+.stat-value{font-size:2rem; font-weight:700; margin-bottom:0.3rem;}
+.stat-label{color:#94a3b8; font-size:0.9rem;}
+.stat-change{font-size:0.85rem; margin-top:0.5rem; color:#94a3b8;}
+
+/* ---------------- Recovery Cards ---------------- */
+.recovery-section{display:grid; gap:2rem; margin-bottom:2rem;}
+.recovery-card{background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border-radius:1rem; padding:1.5rem; transition:0.3s;}
+.recovery-card:hover{transform:scale(1.02);}
+.form-group{display:flex; flex-direction:column; margin-bottom:1rem;}
+.form-group label{margin-bottom:0.3rem; font-size:0.9rem; color:#cbd5e1;}
+.form-group input, .form-group textarea, .form-group select{padding:0.6rem; border:none; border-radius:0.5rem; outline:none; background: rgba(255,255,255,0.08); color:#f8fafc;}
+textarea{resize:none;}
+.submit-btn{background:#7c3aed; padding:0.8rem 1.2rem; border:none; border-radius:0.7rem; color:#fff; cursor:pointer; transition:0.3s;}
+.submit-btn:hover{background:#a855f7;}
+
+/* ---------------- Recovery History ---------------- */
+.history-section{margin-top:2rem;}
+.history-section h3{margin-bottom:1rem;}
+.history-card{background: rgba(255,255,255,0.05); padding:1rem; border-radius:0.8rem; margin-bottom:1rem; display:flex; flex-direction:column; gap:0.3rem;}
+.status{padding:0.2rem 0.5rem; border-radius:0.5rem; font-weight:600; display:inline-block;}
+.status.Pending{background:#f59e0b; color:#fff;}
+.status.InProgress{background:#3b82f6; color:#fff;}
+.status.Completed{background:#10b981; color:#fff;}
+.progress-bar{background: rgba(255,255,255,0.1); height:6px; border-radius:3px; margin-top:0.5rem;}
+.progress-fill{background:#7c3aed; height:100%; border-radius:3px;}
+
+/* ---------------- Report Cases ---------------- */
+.report-section{margin-top:2rem;}
+.report-section h3{margin-bottom:1rem;}
+.report-list{list-style:none;}
+.report-list li{background: rgba(255,255,255,0.05); margin-bottom:0.5rem; padding:0.8rem 1rem; border-radius:0.7rem; display:flex; justify-content:space-between; align-items:center; color:#94a3b8;}
+.report-list li button{background:#ef4444; border:none; color:#fff; padding:0.3rem 0.6rem; border-radius:0.5rem; cursor:pointer; transition:0.3s;}
+.report-list li button:hover{background:#f87171;}
+
+/* ---------------- Floating Action Button ---------------- */
+.fab{position:fixed; bottom:2rem; right:2rem; background:#7c3aed; width:70px; height:70px; border-radius:50%; display:flex; justify-content:center; align-items:center; color:#fff; font-size:1.8rem; cursor:pointer; box-shadow:0 20px 50px rgba(0,0,0,0.6); transition:0.3s; animation:bounce 2s infinite;}
+.fab:hover{background:#a855f7; transform:scale(1.2); box-shadow:0 20px 60px rgba(168,85,247,0.8);}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-15px);}}
+
+/* ---------------- Responsive ---------------- */
+@media(max-width:1024px){.stats-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));}.recovery-section{grid-template-columns:1fr;}}
+@media(max-width:768px){.sidebar{transform:translateX(-260px);}.sidebar.open{transform:translateX(0);}.main-content{margin-left:0;}.menu-toggle{display:flex;}}
+</style>
+</head>
+<body>
+
+<div class="bg-animation">
+  <div class="floating-shape shape1"></div>
+  <div class="floating-shape shape2"></div>
+  <div class="floating-shape shape3"></div>
+</div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo"><i class="fas fa-shield-alt"></i> Phantom</div>
+  <ul class="nav-menu">
+    <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-th-large"></i> Dashboard</a></li>
+    <li class="nav-item"><a href="/request" class="nav-link"><i class="fas fa-plus-circle"></i> New Request</a></li>
+    <li class="nav-item"><a href="/history" class="nav-link"><i class="fas fa-history"></i> Recovery History</a></li>
+    <li class="nav-item"><a href="/wallet" class="nav-link"><i class="fas fa-wallet"></i> Wallets</a></li>
+    <li class="nav-item"><a href="/analytics" class="nav-link"><i class="fas fa-chart-line"></i> Analytics</a></li>
+    <li class="nav-item"><a href="/setting" class="nav-link"><i class="fas fa-cog"></i> Settings</a></li>
+    <li class="nav-item"><a href="/support" class="nav-link"><i class="fas fa-life-ring"></i> Support</a></li>
+  </ul>
+</aside>
+
+<!-- Main Content -->
+<main class="main-content" id="mainContent">
+  <div class="top-bar">
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <div class="welcome-text"><h1>Welcome back, Alex!</h1><p>No recovery requests yet.</p></div>
+    <div class="top-actions">
+      <div class="search-box">
+  <i class="fas fa-search"></i>
+  <input type="text" placeholder="Search requests...">
+</div>
+
+<!-- Notifications -->
+<button class="icon-btn" onclick="window.location.href='notifications.html'">
+  <i class="fas fa-bell"></i>
+</button>
+
+<!-- Profile -->
+<button class="icon-btn" onclick="window.location.href='profile.html'">
+  <i class="fas fa-user-circle"></i>
+</button>
+</div>
+</div>
+
+<!-- Hidden Pages -->
+<div id="notificationsPage" class="page" style="display:none; padding:20px;">
+  <h2>🔔 Notifications</h2>
+  <p>No new alerts right now.</p>
+</div>
+
+<div id="profilePage" class="page" style="display:none; padding:20px;">
+  <h2>👤 Admin Profile</h2>
+  <p>Here you can manage your account settings.</p>
+</div>
+
+  <!-- Stats Grid with zeros -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-header"><div class="stat-icon primary"><i class="fas fa-clipboard-list"></i></div></div>
+      <div class="stat-value">0</div>
+      <div class="stat-label">Total Requests</div>
+      <div class="stat-change"><i class="fas fa-minus"></i> No data</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header"><div class="stat-icon warning"><i class="fas fa-clock"></i></div></div>
+      <div class="stat-value">0</div>
+      <div class="stat-label">Pending</div>
+      <div class="stat-change"><i class="fas fa-minus"></i> No data</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header"><div class="stat-icon success"><i class="fas fa-check-circle"></i></div></div>
+      <div class="stat-value">0</div>
+      <div class="stat-label">Completed</div>
+      <div class="stat-change"><i class="fas fa-minus"></i> No data</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header"><div class="stat-icon danger"><i class="fas fa-times"></i></div></div>
+      <div class="stat-value">0</div>
+      <div class="stat-label">Failed</div>
+      <div class="stat-change"><i class="fas fa-minus"></i> No data</div>
+    </div>
+  </div>
+
+  <!-- Wallet Recovery Forms -->
+  <div class="recovery-section">
+    <!-- Wallet Recovery -->
+    <div class="recovery-card">
+      <h3>Wallet Recovery</h3>
+      <p>Recover corrupted or inaccessible wallets using advanced cryptographic techniques.</p>
+      <div class="form-group">
+        <label>Seed Phrase / File</label>
+        <input type="text" placeholder="Enter seed phrase or upload file">
+      </div>
+      <div class="form-group">
+        <label>Password Bypass / Hint</label>
+        <input type="text" placeholder="Enter password hint or upload encrypted file">
+      </div>
+      <button class="submit-btn">Submit Wallet Recovery Request</button>
+    </div>
+
+    <!-- Lost Key Recovery -->
+    <div class="recovery-card">
+      <h3>Lost Key Recovery</h3>
+      <p>Restore access to lost private keys with specialized algorithms.</p>
+      <div class="form-group">
+        <label>Keystore / Backup</label>
+        <input type="file">
+      </div>
+      <div class="form-group">
+        <label>Hardware Wallet</label>
+        <input type="text" placeholder="Device type / model">
+      </div>
+      <button class="submit-btn">Submit Lost Key Recovery Request</button>
+    </div>
+
+    <!-- Transaction Recovery -->
+    <div class="recovery-card">
+      <h3>Transaction Recovery</h3>
+      <p>Track and recover failed or stuck transactions across multiple blockchains.</p>
+      <div class="form-group">
+        <label>Transaction ID / Hash</label>
+        <input type="text" placeholder="Enter transaction hash">
+      </div>
+      <div class="form-group">
+        <label>Blockchain</label>
+        <select>
+          <option>Bitcoin</option>
+          <option>Ethereum</option>
+          <option>BSC</option>
+          <option>Polygon</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Notes / Priority</label>
+        <textarea placeholder="Optional notes"></textarea>
+      </div>
+      <button class="submit-btn">Submit Transaction Recovery Request</button>
+    </div>
+
+    <!-- Multi-Chain Support -->
+    <div class="recovery-card">
+      <h3>Multi-Chain Recovery</h3>
+      <p>Support for all major blockchains and hundreds of cryptocurrencies.</p>
+      <div class="form-group">
+        <label>Blockchains Involved</label>
+        <input type="text" placeholder="Bitcoin, Ethereum, etc.">
+      </div>
+      <div class="form-group">
+        <label>Affected Coins</label>
+        <input type="text" placeholder="List coins">
+      </div>
+      <div class="form-group">
+        <label>Upload Related Files / Logs</label>
+        <input type="file">
+      </div>
+      <button class="submit-btn">Submit Multi-Chain Recovery Request</button>
+    </div>
+  </div>
+
+   <!-- Empty Recovery History -->
+  <div class="history-section">
+    <h3>Recovery History & Real-Time Status</h3>
+    <p style="color:#94a3b8;">No recovery attempts yet.</p>
+  </div>
+
+  <!-- Empty Report Cases -->
+  <div class="report-section">
+    <h3>Reported Cases</h3>
+    <p style="color:#94a3b8;">No cases reported.</p>
+  </div>
+
+</main>
+
+<!-- Floating Action Button -->
+<div class="fab"><i class="fas fa-plus"></i></div>
+
+<script>
+document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+function showPage(pageId) {
+  // Hide all page sections
+  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  // Show the clicked section
+  document.getElementById(pageId).style.display = 'block';
+}
+</script>
+</body>
+</html>

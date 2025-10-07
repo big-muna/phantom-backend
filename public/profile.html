@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phantom Recovery - Profile</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* ---------------- Base ---------------- */
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Segoe UI', sans-serif;
+  background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  color:#f8fafc;
+  min-height:100vh;
+  padding:1.5rem;
+  transition:background 0.3s, color 0.3s;
+}
+.container { max-width:1100px; margin:0 auto; }
+
+/* ---------------- Tabs ---------------- */
+.tabs {
+  display:flex; overflow-x:auto; gap:0.8rem; margin-bottom:2rem;
+  border-bottom:2px solid rgba(255,255,255,0.1); padding-bottom:0.5rem;
+}
+.tab {
+  padding:0.6rem 1.2rem; cursor:pointer; border-radius:0.7rem;
+  font-weight:600; white-space:nowrap;
+  background: rgba(255,255,255,0.08); backdrop-filter: blur(20px);
+  border:1px solid rgba(124,58,237,0.3);
+  transition:0.3s; color:#f8fafc;
+}
+.tab.active {
+  background: linear-gradient(135deg,#7c3aed,#a855f7);
+  border-color:#a855f7; color:#fff;
+  box-shadow:0 6px 20px rgba(124,58,237,0.5);
+}
+.tab:hover{ background: rgba(255,255,255,0.15); }
+
+/* ---------------- Card ---------------- */
+.card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(15px);
+  border-radius:1rem; padding:1.5rem; margin-bottom:1.5rem;
+  border:1px solid rgba(124,58,237,0.2);
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+.card h3 {
+  font-size:1.2rem; margin-bottom:1rem;
+  display:flex; align-items:center; gap:0.5rem; color:#a855f7;
+}
+
+/* ---------------- Inputs & Upload ---------------- */
+input, select {
+  width:100%; padding:0.6rem 0.9rem; border:none; border-radius:0.7rem;
+  background: rgba(255,255,255,0.1); color:#f8fafc; margin-bottom:0.8rem;
+  border:1px solid rgba(124,58,237,0.3);
+}
+input:focus, select:focus { border-color:#a855f7; box-shadow:0 0 10px rgba(168,85,247,0.5); outline:none; }
+
+.profile-pic-container { position:relative; width:100px; height:100px; margin-bottom:1rem; }
+.profile-pic-container img {
+  width:100%; height:100%; border-radius:50%; object-fit:cover;
+  border:2px solid #a855f7;
+}
+.profile-pic-container label {
+  position:absolute; bottom:0; right:0; background:#7c3aed; color:#fff;
+  border-radius:50%; padding:0.4rem; cursor:pointer; font-size:0.8rem;
+  border:2px solid #fff;
+}
+
+/* ---------------- Buttons ---------------- */
+.btn {
+  padding:0.5rem 1rem; border-radius:0.7rem; font-weight:600;
+  border:none; cursor:pointer; display:inline-flex; align-items:center; gap:0.5rem;
+  transition:0.3s;
+}
+.btn-blue { background: linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; }
+.btn-blue:hover { transform:scale(1.05); box-shadow:0 8px 20px rgba(124,58,237,0.5); }
+.btn-red { background:#ef4444; color:#fff; }
+.btn-red:hover { background:#b91c1c; }
+.btn-outline { background: rgba(255,255,255,0.1); border:1px solid #a855f7; color:#a855f7; }
+.btn-outline:hover { background:#a855f7; color:#fff; }
+
+/* ---------------- Toggle ---------------- */
+.toggle { position: relative; display:inline-block; width:46px; height:24px; }
+.toggle input { opacity:0; width:0; height:0; }
+.slider {
+  position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0;
+  background-color:rgba(255,255,255,0.3); transition:0.4s; border-radius:999px;
+}
+.slider:before {
+  position:absolute; content:""; height:20px; width:20px; left:2px; bottom:2px;
+  background-color:white; transition:0.4s; border-radius:50%;
+}
+input:checked + .slider { background: linear-gradient(135deg,#7c3aed,#a855f7); }
+input:checked + .slider:before { transform:translateX(22px); }
+
+/* ---------------- Lists ---------------- */
+.list-item {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0.8rem; margin-bottom:0.8rem;
+  background: rgba(255,255,255,0.1); border-radius:0.6rem; font-size:0.9rem;
+}
+.status { font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:0.4rem; }
+.status.success { background:#10b981; color:#fff; }
+.status.warning { background:#facc15; color:#000; }
+.status.alert { background:#ef4444; color:#fff; }
+
+/* ---------------- Modal ---------------- */
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:10; }
+.modal-content {
+  background:rgba(255,255,255,0.1); backdrop-filter:blur(20px);
+  padding:1.5rem; border-radius:1rem; width:90%; max-width:400px;
+  border:1px solid rgba(124,58,237,0.3); color:#fff; position:relative;
+}
+.modal-close { position:absolute; top:0.7rem; right:1rem; font-size:1.5rem; cursor:pointer; color:#fff; }
+
+/* ---------------- Dark Mode ---------------- */
+body.light {
+  background:#f9fafb; color:#111827;
+}
+body.light .card { background:#fff; color:#111827; border:1px solid #e5e7eb; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
+body.light .tab { background:#f3f4f6; border:1px solid #d1d5db; color:#111827; }
+body.light .tab.active { background:#3b82f6; border-color:#3b82f6; color:#fff; }
+body.light input, body.light select { background:#fff; color:#111827; border:1px solid #d1d5db; }
+body.light .btn-outline { background:#fff; border:1px solid #3b82f6; color:#3b82f6; }
+body.light .btn-outline:hover { background:#3b82f6; color:#fff; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-tab="profile">Profile</div>
+    <div class="tab" data-tab="preferences">Preferences</div>
+    <div class="tab" data-tab="security">Security</div>
+    <div class="tab" data-tab="sessions">Sessions</div>
+    <div class="tab" data-tab="notifications">Notifications</div>
+    <div class="tab" data-tab="wallets">Wallets</div>
+    <div class="tab" data-tab="activity">Activity</div>
+    <div class="tab" data-tab="actions">Actions</div>
+  </div>
+
+  <!-- Profile Tab -->
+  <div class="tab-content" id="profile-tab">
+    <div class="card">
+      <h3><i class="fas fa-user-circle"></i> Personal Information</h3>
+      <div class="profile-pic-container">
+        <img src="https://via.placeholder.com/100" alt="Profile Picture" id="profilePic">
+        <label for="uploadPic"><i class="fas fa-camera"></i></label>
+        <input type="file" id="uploadPic" style="display:none;">
+      </div>
+      <label>Full Name</label>
+      <input type="text" value="John Doe">
+      <label>Username</label>
+      <input type="text" value="johndoe">
+      <label>Email <span style="color:#10b981;">✔ Verified</span></label>
+      <input type="email" value="john.doe@example.com">
+      <label>Phone (Optional)</label>
+      <input type="tel" value="+1 (555) 123-4567">
+      <button class="btn btn-blue">Save Changes</button>
+    </div>
+  </div>
+
+  <!-- Preferences Tab -->
+  <div class="tab-content" id="preferences-tab" style="display:none;">
+    <div class="card">
+      <h3><i class="fas fa-globe"></i> Language & Preferences</h3>
+      <label>Language</label>
+      <select>
+        <option>English</option>
+        <option>Spanish</option>
+        <option>French</option>
+      </select>
+      <label>Timezone</label>
+      <select>
+        <option>UTC-5 (Eastern Time)</option>
+        <option>UTC+0 (GMT)</option>
+      </select>
+      <div style="margin-top:1rem; display:flex; justify-content:space-between; align-items:center;">
+        <div><i class="fas fa-moon"></i> Dark Mode</div>
+        <label class="toggle"><input type="checkbox" id="darkModeToggle"><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Tab -->
+  <div class="tab-content" id="security-tab" style="display:none;">
+    <div class="card">
+      <h3><i class="fas fa-key"></i> Password</h3>
+      <button class="btn btn-blue" id="openPasswordModal">Change Password</button>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-shield-alt"></i> Two-Factor Authentication</h3>
+      <label class="toggle"><input type="checkbox" id="twoFactorToggle"><span class="slider"></span></label>
+      <div id="twoFactorInfo" style="margin-top:1rem; display:none; background:#10b981; padding:0.5rem; border-radius:0.5rem;">2FA enabled via Authenticator App</div>
+    </div>
+  </div>
+
+  <!-- Sessions Tab -->
+  <div class="tab-content" id="sessions-tab" style="display:none;">
+    <div class="card">
+      <h3><i class="fas fa-desktop"></i> Active Devices</h3>
+      <div class="list-item"><span>Desktop - Chrome</span><button class="btn btn-outline">Logout</button></div>
+      <div class="list-item"><span>Mobile - iOS Safari</span><button class="btn btn-outline">Logout</button></div>
+      <div class="list-item"><span>Web - Firefox</span><button class="btn btn-outline">Logout</button></div>
+      <button class="btn btn-red">Logout All Other Sessions</button>
+    </div>
+  </div>
+
+  <!-- Notifications Tab -->
+  <div class="tab-content" id="notifications-tab" style="display:none;">
+    <div class="card">
+      <h3><i class="fas fa-bell"></i> Notification Settings</h3>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+        <span>Email Alerts</span>
+        <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span>Push Notifications</span>
+        <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wallets Tab -->
+  <div class="tab-content" id="wallets-tab" style="display:none;">
+    <div class="card">
+      <h3><i class="fas fa-wallet"></i> Linked Wallets</h3>
+      <div class="list-item"><span>MetaMask</span><button class="btn btn-outline">Remove</button></div>
+      <div class="list-item"><span>Trust Wallet</span><button class="btn btn-outline">Remove</button></div>
+      <div class="list-item"><span>Binance</span><button class="btn btn-outline">Remove</button></div>
+      <button class="btn btn-blue">Add New Wallet</button>
+    </div>
+  </div>
+
+  <!-- Activity Tab -->
+  <div class="tab-content" id="activity-tab" style="display:none;">
+    <div class="card">
+      <h3><i class="fas fa-history"></i> Activity & Logs</h3>
+      <div class="list-item"><span>Login - 2025-10-01 - Desktop</span><span class="status success">Success</span></div>
+      <div class="list-item"><span>Failed Login - 2025-09-30 - Mobile</span><span class="status alert">Failed</span></div>
+      <div class="list-item"><span>Wallet Withdrawal - Binance</span><span class="status warning">Pending</span></div>
+    </div>
+  </div>
+
+  <!-- Actions Tab -->
+  <div class="tab-content" id="actions-tab" style="display:none;">
+    <div class="card">
+      <h3><i class="fas fa-file-export"></i> Account Actions</h3>
+      <button class="btn btn-outline">Export Data</button>
+      <button class="btn btn-red">Deactivate Account</button>
+      <button class="btn btn-red">Delete Account</button>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-headset"></i> Support</h3>
+      <p>Need help? <a href="#">Contact Support</a></p>
+      <div style="margin-top:0.5rem; background:#10b981; padding:0.5rem; border-radius:0.5rem;">System Status: All Secure</div>
+    </div>
+  </div>
+
+  <!-- Password Modal -->
+  <div class="modal" id="passwordModal">
+    <div class="modal-content">
+      <span class="modal-close" id="closeModal">&times;</span>
+      <h3>Change Password</h3>
+      <label>New Password</label>
+      <input type="password" id="newPassword">
+      <label>Confirm Password</label>
+      <input type="password" id="confirmPassword">
+      <button class="btn btn-blue">Save Password</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------------- Tabs ----------------
+const tabs = document.querySelectorAll('.tab');
+const tabContents = document.querySelectorAll('.tab-content');
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.tab + '-tab';
+    tabContents.forEach(c => c.style.display = c.id === target ? 'block' : 'none');
+  });
+});
+
+// ---------------- Dark Mode Toggle ----------------
+const darkModeToggle = document.getElementById('darkModeToggle');
+if(darkModeToggle){
+  darkModeToggle.addEventListener('change', () => {
+    document.body.classList.toggle('light', !darkModeToggle.checked);
+  });
+}
+
+// ---------------- 2FA Toggle ----------------
+const twoFactorToggle = document.getElementById('twoFactorToggle');
+const twoFactorInfo = document.getElementById('twoFactorInfo');
+if(twoFactorToggle){
+  twoFactorToggle.addEventListener('change', () => {
+    twoFactorInfo.style.display = twoFactorToggle.checked ? 'block' : 'none';
+  });
+}
+
+// ---------------- Password Modal ----------------
+const passwordModal = document.getElementById('passwordModal');
+const openPasswordModal = document.getElementById('openPasswordModal');
+if(openPasswordModal){
+  openPasswordModal.addEventListener('click', () => passwordModal.style.display = 'flex');
+}
+document.getElementById('closeModal').addEventListener('click', () => passwordModal.style.display = 'none');
+window.addEventListener('click', e => { if(e.target === passwordModal) passwordModal.style.display = 'none'; });
+
+// ---------------- Profile Picture Upload ----------------
+const uploadPic = document.getElementById('uploadPic');
+const profilePic = document.getElementById('profilePic');
+if(uploadPic){
+  uploadPic.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if(file){ profilePic.src = URL.createObjectURL(file); }
+  });
+}
+
+// ---------------- User Data & Wallets ----------------
+const userId = 1; // Example logged-in user ID
+
+async function loadProfile(){
+  try {
+    const res = await fetch(`/api/user/${userId}`);
+    const user = await res.json();
+
+    // Profile tab
+    document.getElementById("fullName").value = user.fullName || "";
+    document.getElementById("username").value = user.username || "";
+    document.getElementById("email").value = user.email || "";
+    document.getElementById("phone").value = user.phone || "";
+    document.getElementById("profilePic").src = user.profilePic || "https://via.placeholder.com/100";
+
+    // Preferences tab
+    document.querySelector('#preferences-tab select')?.value = user.language || "English";
+    darkModeToggle.checked = user.darkMode || false;
+
+    // Wallets
+    loadWallets(user.wallets || []);
+  } catch(err){
+    console.error("Error loading profile:", err);
+  }
+}
+loadProfile();
+
+// ---------------- Save Profile ----------------
+document.querySelector('#profile-tab .btn-blue')?.addEventListener('click', async () => {
+  const payload = {
+    fullName: document.getElementById("fullName").value,
+    phone: document.getElementById("phone").value
+  };
+  try {
+    const res = await fetch(`/api/user/${userId}`, {
+      method: "PATCH",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    alert(data.message || "Profile updated successfully");
+    loadProfile();
+  } catch(err){
+    console.error("Error saving profile:", err);
+  }
+});
+
+// ---------------- Save Preferences ----------------
+document.querySelector('#preferences-tab .btn-blue')?.addEventListener('click', async () => {
+  const payload = {
+    language: document.querySelector('#preferences-tab select')?.value || "English",
+    darkMode: darkModeToggle.checked
+  };
+  try {
+    const res = await fetch(`/api/user/${userId}`, {
+      method: "PATCH",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    alert(data.message || "Preferences updated successfully");
+    loadProfile();
+  } catch(err){
+    console.error("Error saving preferences:", err);
+  }
+});
+
+// ---------------- Wallets ----------------
+async function loadWallets(wallets){
+  const walletListDiv = document.querySelector('#wallets-tab .card');
+  if(!walletListDiv) return;
+
+  walletListDiv.querySelectorAll('.list-item').forEach(n => n.remove()); // clear old
+
+  (wallets || []).forEach(wallet => {
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    div.innerHTML = `<span>${wallet}</span><button class="btn btn-outline">Remove</button>`;
+    div.querySelector('button').addEventListener('click', async () => {
+      const updatedWallets = wallets.filter(w => w !== wallet);
+      try {
+        await fetch(`/api/user/${userId}`, {
+          method: 'PATCH',
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({wallets: updatedWallets})
+        });
+        loadProfile();
+      } catch(err){
+        console.error("Error removing wallet:", err);
+      }
+    });
+    walletListDiv.appendChild(div);
+  });
+
+  // Add new wallet
+  walletListDiv.querySelector('.btn-blue')?.addEventListener('click', async () => {
+    const walletName = prompt("Enter new wallet name:");
+    if(!walletName) return;
+
+    try {
+      const res = await fetch(`/api/user/${userId}`);
+      const user = await res.json();
+      const updatedWallets = [...(user.wallets || []), walletName];
+      await fetch(`/api/user/${userId}`, {
+        method: 'PATCH',
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({wallets: updatedWallets})
+      });
+      loadProfile();
+    } catch(err){
+      console.error("Error adding wallet:", err);
+    }
+  });
+}
+</script>
+</body>
+</html>

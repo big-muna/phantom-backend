@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phantom Recovery - History</title>
+<style>
+/* ---------------- Base ---------------- */
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  min-height:100vh;
+  padding:1.5rem;
+  color:#f8fafc;
+  overflow-x:hidden;
+}
+.container{ max-width:1200px; margin:0 auto; position:relative; z-index:2;}
+h1{text-align:center;font-size:2.2rem;margin-bottom:0.5rem;text-shadow:0 4px 20px rgba(0,0,0,0.3);}
+.subtitle{text-align:center;margin-bottom:2rem;opacity:0.9;font-size:1rem;}
+
+/* ---------------- Navigation ---------------- */
+.nav-bar{
+  display:flex; justify-content:center; gap:1rem; margin-bottom:2rem;
+  flex-wrap:wrap; z-index:2; position:relative;
+}
+.nav-item{
+  padding:0.6rem 1.2rem; border-radius:0.7rem; cursor:pointer;
+  background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
+  border:1px solid rgba(124,58,237,0.3); color:#f8fafc; transition:0.3s;
+  font-weight:500; font-size:0.9rem;
+}
+.nav-item:hover{ background: rgba(255,255,255,0.15); transform:translateY(-2px); }
+.nav-item.active{ background: linear-gradient(135deg,#7c3aed,#a855f7); border-color:#a855f7; box-shadow:0 8px 25px rgba(124,58,237,0.4); }
+
+/* ---------------- Filter & Search ---------------- */
+.filter-bar{
+  display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center; margin-bottom:1rem;
+}
+.filter-bar select, .filter-bar input{
+  padding:0.5rem 0.8rem; border-radius:0.6rem; border:none; outline:none;
+  font-size:0.9rem; backdrop-filter: blur(20px); background: rgba(255,255,255,0.08); color:#f8fafc;
+  border:1px solid rgba(124,58,237,0.3);
+}
+.filter-bar select:focus, .filter-bar input:focus{ border-color:#a855f7; box-shadow:0 0 10px rgba(168,85,247,0.5); }
+
+/* ---------------- History Cards ---------------- */
+.recovery-section { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1rem; }
+.recovery-card { background: rgba(255,255,255,0.08); backdrop-filter:blur(15px); border-radius:1rem; padding:1.2rem; transition:0.4s; border:1px solid rgba(124,58,237,0.2); cursor:pointer; overflow:hidden;}
+.recovery-card:hover{ transform:translateY(-3px) scale(1.01); box-shadow:0 15px 40px rgba(124,58,237,0.4);}
+.recovery-card h3{ color:#a855f7; font-size:1.2rem; margin-bottom:0.5rem;}
+.recovery-card .status { font-weight:600; padding:0.2rem 0.6rem; border-radius:0.5rem; font-size:0.85rem; color:#fff; }
+.status.pending { background:#facc15; }       /* Yellow */
+.status.in-progress { background:#3b82f6; }   /* Blue */
+.status.completed { background:#10b981; }     /* Green */
+
+.card-details { display:none; margin-top:0.8rem; font-size:0.9rem; opacity:0.9; }
+.card-details p{ margin:0.3rem 0; }
+
+/* ---------------- Export Button ---------------- */
+.export-btn{
+  background: linear-gradient(135deg,#7c3aed,#a855f7);
+  color:#fff; border:none; padding:0.6rem 1rem; border-radius:0.7rem;
+  cursor:pointer; font-weight:600; font-size:0.9rem; margin-bottom:1rem;
+  transition:0.3s;
+}
+.export-btn:hover{ transform:scale(1.05); box-shadow:0 10px 25px rgba(124,58,237,0.5); }
+
+/* ---------------- Responsive ---------------- */
+@media(max-width:768px){
+  .recovery-section{ grid-template-columns:1fr; }
+  .nav-bar{ justify-content:space-around; }
+  h1{ font-size:1.8rem; }
+  .subtitle{ font-size:0.9rem; }
+  .filter-bar{ flex-direction:column; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📜 Recovery History</h1>
+  <p class="subtitle">View and track all past recovery requests</p>
+
+  <!-- Navigation -->
+  <div class="nav-bar">
+  <a href="/dashboard" class="nav-item active">Dashboard</a>
+  <a href="/profile" class="nav-item">Profile</a>
+  <a href="/login" class="nav-item">Logout</a>
+</div>
+
+
+  <!-- Filters & Search -->
+  <div class="filter-bar">
+    <select id="filterType">
+      <option value="">All Types</option>
+      <option value="Wallet Recovery">Wallet Recovery</option>
+      <option value="Lost Key Recovery">Lost Key Recovery</option>
+      <option value="Reported Case">Reported Case</option>
+    </select>
+    <select id="filterStatus">
+      <option value="">All Status</option>
+      <option value="Pending">Pending</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Completed">Completed</option>
+    </select>
+    <input type="text" id="searchInput" placeholder="Search by wallet, email or keyword...">
+    <button class="export-btn" onclick="exportHistory()">Export CSV</button>
+  </div>
+
+  <!-- History Cards -->
+  <div class="recovery-section" id="historySection">
+    <!-- No history message will appear here if empty -->
+  </div>
+</div>
+
+<script>
+// ---------------- Navigation ----------------
+function switchNav(el){
+  document.querySelectorAll('.nav-item').forEach(nav=>nav.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ---------------- Expand/Collapse ----------------
+function toggleDetails(card){
+  const details = card.querySelector('.card-details');
+  details.style.display = details.style.display === 'block' ? 'none' : 'block';
+}
+
+// ---------------- Example Data ----------------
+const recoveryHistory = [
+  { type: "Wallet Recovery", status: "Pending", statusClass: "pending", submitted: "2025-09-30 18:45", notes: "Lost MetaMask wallet seed phrase, urgent." },
+  { type: "Lost Key Recovery", status: "In Progress", statusClass: "in-progress", submitted: "2025-09-28 14:20", notes: "Keystore file found but password unknown." },
+  { type: "Reported Case", status: "Completed", statusClass: "completed", submitted: "2025-09-25 09:10", notes: "Fraudulent transaction reported and resolved." }
+];
+
+// ---------------- Render History ----------------
+function renderHistory(data){
+  const section = document.getElementById('historySection');
+  section.innerHTML = '';
+  if(data.length === 0){
+    const msg = document.createElement('p');
+    msg.style.textAlign = 'center';
+    msg.style.gridColumn = '1/-1';
+    msg.style.opacity = '0.8';
+    msg.style.marginTop = '2rem';
+    msg.textContent = '📝 No recovery history found yet.';
+    section.appendChild(msg);
+    return;
+  }
+  data.forEach(item=>{
+    const card = document.createElement('div');
+    card.className = 'recovery-card';
+    card.onclick = () => toggleDetails(card);
+    card.innerHTML = `
+      <h3>${item.type} <span class="status ${item.statusClass}">${item.status}</span></h3>
+      <div class="card-details">
+        <p><strong>Submitted:</strong> ${item.submitted}</p>
+        <p><strong>Notes:</strong> ${item.notes}</p>
+      </div>
+    `;
+    section.appendChild(card);
+  });
+}
+renderHistory(recoveryHistory);
+
+// ---------------- Filtering & Searching ----------------
+document.getElementById('filterType').addEventListener('change', applyFilters);
+document.getElementById('filterStatus').addEventListener('change', applyFilters);
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+function applyFilters(){
+  const type = document.getElementById('filterType').value.toLowerCase();
+  const status = document.getElementById('filterStatus').value.toLowerCase();
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = recoveryHistory.filter(item=>{
+    const matchesType = type ? item.type.toLowerCase() === type : true;
+    const matchesStatus = status ? item.status.toLowerCase() === status : true;
+    const matchesSearch = search ? (item.type + item.notes + item.submitted).toLowerCase().includes(search) : true;
+    return matchesType && matchesStatus && matchesSearch;
+  });
+  renderHistory(filtered);
+}
+
+// ---------------- Export CSV ----------------
+function exportHistory(){
+  if(recoveryHistory.length === 0) return alert("No history to export.");
+  let csv = "Type,Status,Submitted,Notes\n";
+  recoveryHistory.forEach(item=>{
+    csv += `"${item.type}","${item.status}","${item.submitted}","${item.notes}"\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'recovery_history.csv';
+  link.click();
+}
+</script>
+</body>
+</html>

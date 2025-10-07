@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phantom Recovery - Support</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* -------- Base -------- */
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+    body{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#f8fafc;line-height:1.6;}
+    a{text-decoration:none;color:inherit;}
+    h1,h2,h3{font-weight:600;}
+
+    /* -------- Navigation -------- */
+    nav{background:rgba(255,255,255,0.05);padding:1rem 1.2rem;
+        display:flex;justify-content:space-between;align-items:center;
+        border-bottom:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(15px);}
+    nav .logo{font-size:1.1rem;font-weight:bold;color:#fff;}
+    nav ul{list-style:none;display:flex;gap:1.2rem;}
+    nav ul li a{color:#fff;font-weight:500;transition:0.3s;}
+    nav ul li a:hover{color:#d8b4fe;}
+    .menu-toggle{display:none;font-size:1.5rem;cursor:pointer;color:#fff;}
+    @media(max-width:768px){
+      nav ul{display:none;flex-direction:column;gap:0.8rem;margin-top:1rem;}
+      nav ul.active{display:flex;}
+      .menu-toggle{display:block;}
+    }
+
+    /* -------- Status Banner -------- */
+    .status-banner{text-align:center;padding:0.7rem;
+      background:rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.2);
+      color:#4ade80;font-size:0.9rem;}
+
+    /* -------- Header -------- */
+    .support-header{text-align:center;padding:2rem 1rem;}
+    .support-header h1{font-size:1.8rem;margin-bottom:1rem;}
+    .search-box{position:relative;max-width:100%;margin:auto;}
+    .search-box input{width:100%;padding:0.9rem;border-radius:50px;border:none;outline:none;
+      font-size:1rem;background:rgba(255,255,255,0.1);color:#fff;backdrop-filter:blur(10px);}
+    .search-box input::placeholder{color:#e2e8f0;}
+    .search-box i{position:absolute;right:20px;top:50%;transform:translateY(-50%);color:#d1d5db;}
+    .suggestions{background:rgba(255,255,255,0.08);border-radius:10px;margin-top:0.5rem;
+      display:none;overflow:hidden;}
+    .suggestions li{padding:0.8rem 1rem;border-bottom:1px solid rgba(255,255,255,0.15);cursor:pointer;}
+    .suggestions li:hover{background:rgba(255,255,255,0.15);}
+
+    /* -------- Categories -------- */
+    .categories{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:2rem 1rem;}
+    @media(max-width:600px){.categories{grid-template-columns:1fr;}}
+    .category-card{background:rgba(255,255,255,0.08);padding:1.5rem;border-radius:12px;
+      text-align:center;transition:all 0.3s ease;cursor:pointer;border:1px solid rgba(255,255,255,0.15);}
+    .category-card i{font-size:1.8rem;margin-bottom:0.8rem;color:#d8b4fe;}
+    .category-card:hover{transform:translateY(-4px);border:1px solid #a855f7;}
+
+    /* -------- FAQ -------- */
+    .faq{padding:2rem 1rem;max-width:800px;margin:auto;}
+    .faq h2{text-align:center;margin-bottom:1.2rem;}
+    .faq-item{background:rgba(255,255,255,0.08);margin-bottom:1rem;border-radius:10px;overflow:hidden;}
+    .faq-question{padding:1rem;cursor:pointer;background:rgba(255,255,255,0.15);font-weight:bold;}
+    .faq-answer{display:none;padding:1rem;background:rgba(255,255,255,0.05);}
+    .faq-item.active .faq-answer{display:block;}
+
+    /* -------- Support Options -------- */
+    .support-options{text-align:center;padding:2rem 1rem;}
+    .support-options h2{margin-bottom:1rem;}
+    .support-buttons{display:flex;flex-direction:column;gap:1rem;align-items:center;}
+    .support-buttons a{width:100%;max-width:280px;text-align:center;padding:1rem;border-radius:10px;
+      background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-weight:bold;}
+
+    /* -------- Community -------- */
+    .community{padding:2rem 1rem;text-align:center;}
+    .community-links{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;}
+    .community-links a{background:rgba(255,255,255,0.08);padding:0.8rem 1rem;border-radius:10px;
+      display:flex;align-items:center;gap:0.5rem;}
+
+    /* -------- Footer -------- */
+    footer{text-align:center;padding:1.5rem;background:rgba(255,255,255,0.05);margin-top:1.5rem;}
+
+    /* -------- Modal -------- */
+    .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;
+      background:rgba(0,0,0,0.6);justify-content:center;align-items:center;}
+    .modal-content{background:rgba(255,255,255,0.1);padding:1.5rem;border-radius:12px;
+      width:95%;max-width:400px;color:#fff;position:relative;}
+    .close{position:absolute;top:10px;right:15px;cursor:pointer;font-size:20px;}
+    .chat-box{height:200px;overflow-y:auto;padding:1rem;margin-bottom:1rem;background:rgba(255,255,255,0.05);border-radius:8px;}
+    .chat-box .bot{background:rgba(124,58,237,0.4);padding:0.5rem;border-radius:8px;margin-bottom:0.5rem;}
+    .chat-box .user{background:rgba(56,189,248,0.4);padding:0.5rem;border-radius:8px;margin-bottom:0.5rem;text-align:right;}
+    .chat-input{display:flex;gap:0.5rem;}
+    .chat-input input{flex:1;padding:0.6rem;border-radius:6px;border:none;}
+    .chat-input button{padding:0.6rem 1rem;border:none;border-radius:6px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;}
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="logo">Phantom Recovery</div>
+    <i class="fas fa-bars menu-toggle"></i>
+    <ul>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/setting">Settings</a></li>
+      <li><a href="/login">Logout</a></li>
+    </ul>
+  </nav>
+
+  <!-- Status Banner -->
+  <div class="status-banner">✅ All systems operational</div>
+
+  <!-- Header -->
+  <section class="support-header">
+    <h1>How can we help you?</h1>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search for help...">
+      <i class="fas fa-search"></i>
+      <ul class="suggestions" id="suggestions"></ul>
+    </div>
+  </section>
+
+  <!-- Categories -->
+  <section class="categories">
+    <div class="category-card"><i class="fas fa-key"></i><h3>Account & Security</h3></div>
+    <div class="category-card"><i class="fas fa-wallet"></i><h3>Wallet & Transactions</h3></div>
+    <div class="category-card"><i class="fas fa-bug"></i><h3>Troubleshooting</h3></div>
+    <div class="category-card"><i class="fas fa-question-circle"></i><h3>General FAQs</h3></div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq">
+    <h2>Top FAQs</h2>
+    <div class="faq-item"><div class="faq-question">Forgot my password?</div><div class="faq-answer">Use "Forgot Password" at login.</div></div>
+    <div class="faq-item"><div class="faq-question">How to enable 2FA?</div><div class="faq-answer">Go to Settings > Security > Enable 2FA.</div></div>
+    <div class="faq-item"><div class="faq-question">Wallet not syncing?</div><div class="faq-answer">Check your internet and restart the app.</div></div>
+  </section>
+
+  <!-- Support Options -->
+  <section class="support-options">
+    <h2>Need more help?</h2>
+    <div class="support-buttons">
+      <a id="openChat"><i class="fas fa-comments"></i> Live Chat</a>
+      <a id="openEmail"><i class="fas fa-envelope"></i> Email Support</a>
+      <a id="openTicket"><i class="fas fa-ticket-alt"></i> Submit Ticket</a>
+    </div>
+  </section>
+
+  <!-- Community -->
+  <section class="community">
+    <h2>Community & Guides</h2>
+    <div class="community-links">
+      <a href="#"><i class="fab fa-telegram"></i> Telegram</a>
+      <a href="#"><i class="fab fa-discord"></i> Discord</a>
+      <a href="#"><i class="fab fa-twitter"></i> Twitter</a>
+      <a href="#"><i class="fas fa-book"></i> Docs</a>
+    </div>
+  </section>
+
+  <footer><p>&copy; 2025 Phantom Recovery. All rights reserved.</p></footer>
+
+  <!-- Modals -->
+  <div id="chatModal" class="modal"><div class="modal-content">
+    <span class="close">&times;</span><h2>Live Chat</h2>
+    <div class="chat-box" id="chatBox"><div class="bot">👩‍💻 Support: Hi! How can I help?</div></div>
+    <div class="chat-input"><input type="text" id="chatMessage"><button onclick="sendMessage()">Send</button></div>
+  </div></div>
+
+  <div id="emailModal" class="modal"><div class="modal-content">
+    <span class="close">&times;</span><h2>Email Support</h2>
+    <form><input type="text" placeholder="Your Email"><input type="text" placeholder="Subject">
+      <textarea placeholder="Message..." style="width:100%;height:100px;"></textarea><button type="submit">Send</button></form>
+  </div></div>
+
+  <div id="ticketModal" class="modal"><div class="modal-content">
+    <span class="close">&times;</span><h2>Submit Ticket</h2>
+    <form><select><option>Account Issue</option><option>Wallet Recovery</option><option>Other</option></select>
+      <textarea placeholder="Describe issue..." style="width:100%;height:100px;"></textarea><button type="submit">Submit</button></form>
+  </div></div>
+
+  <!-- JS -->
+ <!-- Socket.IO for Live Chat -->
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<script>
+  // ===============================================================
+  // ---------------------- SOCKET CONNECTION ----------------------
+  // ===============================================================
+  const socket = io("https://your-live-domain.com", {
+    transports: ["websocket"],
+  });
+  // 🔸 Replace with your deployed backend domain or IP
+
+  // ===============================================================
+  // ---------------------- NAVIGATION MENU ------------------------
+  // ===============================================================
+  const menuToggle = document.querySelector(".menu-toggle");
+  const navMenu = document.querySelector("nav ul");
+  if (menuToggle && navMenu) {
+    menuToggle.addEventListener("click", () => navMenu.classList.toggle("active"));
+  }
+
+  // ===============================================================
+  // ---------------------- FAQ TOGGLE -----------------------------
+  // ===============================================================
+  document.querySelectorAll(".faq-question").forEach(q =>
+    q.addEventListener("click", () => q.parentElement.classList.toggle("active"))
+  );
+
+  // ===============================================================
+  // ---------------------- SEARCH SUGGESTIONS ---------------------
+  // ===============================================================
+  const searchInput = document.getElementById("searchInput");
+  const suggestions = document.getElementById("suggestions");
+  const topics = [
+    "Forgot password",
+    "2FA issue",
+    "Wallet recovery",
+    "Transaction failed",
+    "Locked account",
+  ];
+
+  if (searchInput && suggestions) {
+    searchInput.oninput = () => {
+      const v = searchInput.value.toLowerCase();
+      suggestions.innerHTML = "";
+      if (v) {
+        const matches = topics.filter(t => t.toLowerCase().includes(v));
+        if (matches.length) {
+          suggestions.style.display = "block";
+          matches.forEach(t => {
+            const li = document.createElement("li");
+            li.textContent = t;
+            li.onclick = () => {
+              searchInput.value = t;
+              suggestions.style.display = "none";
+            };
+            suggestions.appendChild(li);
+          });
+        } else suggestions.style.display = "none";
+      } else suggestions.style.display = "none";
+    };
+  }
+
+  // ===============================================================
+  // ---------------------- MODALS HANDLING ------------------------
+  // ===============================================================
+  const modals = {
+    chat: document.getElementById("chatModal"),
+    email: document.getElementById("emailModal"),
+    ticket: document.getElementById("ticketModal"),
+  };
+
+  const openChat = document.getElementById("openChat");
+  const openEmail = document.getElementById("openEmail");
+  const openTicket = document.getElementById("openTicket");
+
+  if (openChat) openChat.onclick = () => (modals.chat.style.display = "flex");
+  if (openEmail) openEmail.onclick = () => (modals.email.style.display = "flex");
+  if (openTicket) openTicket.onclick = () => (modals.ticket.style.display = "flex");
+
+  document.querySelectorAll(".close").forEach(c =>
+    c.addEventListener("click", () => (c.parentElement.parentElement.style.display = "none"))
+  );
+
+  // ===============================================================
+  // ---------------------- EMAIL SUPPORT FORM ---------------------
+  // ===============================================================
+  const emailForm = document.getElementById("emailForm");
+  if (emailForm) {
+    emailForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      const name = document.getElementById("emailName").value.trim();
+      const email = document.getElementById("emailAddress").value.trim();
+      const subject = document.getElementById("emailSubject").value.trim();
+      const message = document.getElementById("emailMessage").value.trim();
+
+      try {
+        const res = await fetch("/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, subject, message }),
+        });
+        const data = await res.json();
+        alert(data.message || "✅ Message sent successfully!");
+        emailForm.reset();
+      } catch (err) {
+        console.error("Error sending email:", err);
+        alert("❌ Failed to send message. Please try again.");
+      }
+    });
+  }
+
+  // ===============================================================
+  // ---------------------- LIVE CHAT ------------------------------
+  // ===============================================================
+  const chatBox = document.getElementById("chatBox");
+  const chatInput = document.getElementById("chatMessage"); // matches your HTML
+  const chatSendBtn = chatInput?.nextElementSibling; // the send button next to input
+
+  function addChatMessage(sender, text) {
+    if (!chatBox) return;
+    const msg = document.createElement("div");
+    msg.className = sender === "user" ? "user" : "bot";
+    msg.textContent = text;
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    addChatMessage("user", text);
+    socket.emit("supportMessage", text);
+    chatInput.value = "";
+  }
+
+  // Attach send button click
+  chatSendBtn?.addEventListener("click", sendMessage);
+
+  // Send on Enter key
+  chatInput?.addEventListener("keypress", e => {
+    if (e.key === "Enter") sendMessage();
+  });
+
+  // Receive replies from server
+  socket.on("supportReply", msg => addChatMessage("bot", msg));
+
+  // ===============================================================
+  // ---------------------- ADMIN NOTIFICATIONS --------------------
+  // ===============================================================
+  socket.on("adminNotification", data => {
+    console.log("📢 Admin Notification:", data.message);
+  });
+</script>
+</body>
+</html>

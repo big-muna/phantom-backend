@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phantom Recovery - Professional Crypto Wallet Recovery</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #0f172a;
+    color: #fff;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /* ---------------- Navigation ---------------- */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  padding: 1rem 0;
+}
+
+nav.scrolled {
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.logo i {
+  color: #a855f7;
+  font-size: 2rem;
+  transition: transform 0.3s ease;
+}
+
+.logo i:hover {
+  transform: rotate(15deg) scale(1.1);
+}
+
+/* Nav Links */
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+  align-items: center;
+}
+
+.nav-links a {
+  position: relative;
+  color: #f1f5f9;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  width: 0%;
+  height: 2px;
+  background: #a855f7;
+  transition: width 0.3s ease;
+}
+
+.nav-links a:hover {
+  color: #a855f7;
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+/* Call-to-Action Button */
+.cta-btn {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.6rem;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.cta-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4);
+}
+
+/* Mobile Menu Toggle */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.nav-toggle:hover {
+  transform: scale(1.1);
+}
+
+/* ---------------- Mobile Navigation ---------------- */
+@media (max-width: 768px) {
+  .nav-toggle {
+    display: block;
+  }
+
+  .nav-links {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    background: rgba(15, 23, 42, 0.97);
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 0 0;
+    border-radius: 0 0 1rem 1rem;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+
+    max-height: 0; /* hidden by default */
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease;
+  }
+
+  .nav-links.active {
+    max-height: 450px; /* expand */
+    padding: 1.5rem 0;
+  }
+
+  .nav-links li {
+    margin: 0.5rem 0;
+  }
+
+  .nav-links a {
+    font-size: 1.15rem;
+    color: #f1f5f9;
+    display: block;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    transition: background 0.3s;
+  }
+
+  .nav-links a:hover {
+    background: rgba(124, 58, 237, 0.25);
+  }
+}
+
+  /* Hero Section */
+  .hero {
+    position: relative;
+    padding: 10rem 2rem 6rem;
+    text-align: center;
+    overflow: hidden;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gradient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    animation: float 8s ease-in-out infinite;
+    opacity: 0.5;
+  }
+
+  .orb-1 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    top: -100px;
+    left: -100px;
+  }
+
+  .orb-2 {
+    width: 350px;
+    height: 350px;
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    bottom: -100px;
+    right: -100px;
+    animation-delay: 2s;
+  }
+
+  .orb-3 {
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    top: 50%;
+    left: 50%;
+    animation-delay: 4s;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-20px, -20px); }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    max-width: 1000px;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .hero-title {
+    font-size: 4rem;
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-description {
+    font-size: 1.25rem;
+    color: #cbd5e1;
+    max-width: 700px;
+    margin: 0 auto 2.5rem;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+
+  .primary-btn {
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    padding: 1rem 2rem;
+    border-radius: 0.75rem;
+    border: none;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+  }
+
+  .primary-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(124, 58, 237, 0.5);
+  }
+
+  .secondary-btn {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+  }
+
+  .secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #a855f7;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-label {
+    color: #94a3b8;
+    font-size: 0.95rem;
+  }
+
+  .floating-elements {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+  }
+
+  .crypto-coin {
+    position: absolute;
+    font-size: 3rem;
+    opacity: 0.1;
+    animation: float-coin 6s ease-in-out infinite;
+  }
+
+  .crypto-coin:nth-child(1) { top: 20%; left: 10%; }
+  .crypto-coin:nth-child(2) { top: 30%; right: 15%; animation-delay: 1s; }
+  .crypto-coin:nth-child(3) { bottom: 20%; left: 20%; animation-delay: 2s; }
+
+  @keyframes float-coin {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-30px) rotate(10deg); }
+  }
+
+  /* Services Section */
+  .services {
+    padding: 6rem 2rem;
+    background: rgba(30, 41, 59, 0.5);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .section-header h2 {
+    font-size: 3rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+  }
+
+  .section-header p {
+    font-size: 1.25rem;
+    color: #cbd5e1;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+
+  .service-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    transition: all 0.3s;
+  }
+
+  .service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(124, 58, 237, 0.3);
+    border-color: rgba(168, 85, 247, 0.5);
+  }
+
+  .service-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+  }
+
+  .service-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .service-card > p {
+    color: #cbd5e1;
+    margin-bottom: 1.5rem;
+  }
+
+  .service-features {
+    list-style: none;
+    margin-bottom: 1.5rem;
+  }
+
+  .service-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .service-features i {
+    color: #a855f7;
+  }
+
+  .service-btn {
+    background: none;
+    border: none;
+    color: #a855f7;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: gap 0.3s;
+  }
+
+  .service-btn:hover {
+    gap: 0.75rem;
+  }
+
+  /* Testimonials Section */
+  .testimonials {
+    padding: 6rem 2rem;
+  }
+
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+  }
+
+  .testimonial-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    transition: all 0.3s;
+  }
+
+  .testimonial-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(124, 58, 237, 0.25);
+  }
+
+  .testimonial-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .user-info-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .avatar {
+    font-size: 3rem;
+  }
+
+  .user-info h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .user-info span {
+    color: #94a3b8;
+    font-size: 0.9rem;
+  }
+
+  .amount-recovered {
+    color: #10b981;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .testimonial-content {
+    color: #cbd5e1;
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+  }
+
+  .testimonial-rating {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .star {
+    color: #fbbf24;
+    font-size: 1.1rem;
+  }
+
+  /* Contact Section */
+  .contact {
+    padding: 6rem 2rem;
+    background: rgba(30, 41, 59, 0.5);
+  }
+
+  .contact-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: start;
+  }
+
+  .contact-info h2 {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+  }
+
+  .contact-info > p {
+    color: #cbd5e1;
+    margin-bottom: 2.5rem;
+    font-size: 1.1rem;
+  }
+
+  .contact-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .contact-method {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .method-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.5rem;
+  }
+
+  .contact-method h4 {
+    margin-bottom: 0.25rem;
+  }
+
+  .contact-method p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+  }
+
+  .contact-form {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+  }
+
+  .contact-form input,
+  .contact-form select,
+  .contact-form textarea {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+  }
+
+  .contact-form input:focus,
+  .contact-form select:focus,
+  .contact-form textarea:focus {
+    outline: none;
+    border-color: #a855f7;
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+  }
+
+  .contact-form textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+
+  .form-submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    border: none;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: all 0.3s;
+  }
+
+  .form-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(124, 58, 237, 0.5);
+  }
+
+  /* ---------------- Footer ---------------- */
+.footer {
+  background: #020617;
+  padding: 4rem 2rem 2rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr; /* 3 columns now */
+  gap: 3rem;
+  margin-bottom: 3rem;
+  align-items: start;
+}
+
+.footer-brand .logo {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.footer-brand p {
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.social-links {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.social-links a {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.social-links a:hover {
+  background: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+}
+
+.footer-section h4 {
+  margin-bottom: 1.25rem;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-section ul li {
+  margin-bottom: 0.75rem;
+}
+
+.footer-section ul li a {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+  color: #a855f7;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 1024px) {
+  .footer-content {
+    grid-template-columns: 1fr 1fr; /* 2 columns for tablet */
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer-content {
+    grid-template-columns: 1fr; /* 1 column for mobile */
+    text-align: center;
+  }
+  
+  .social-links {
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .footer-section ul li {
+    display: inline-block;
+    margin: 0 0.75rem 0.5rem;
+  }
+}
+
+  /* Chat Widget */
+  .chat-widget {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+  }
+
+  .chat-toggle {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    border-radius: 50%;
+    border: none;
+    color: white;
+    font-size: 1.75rem;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .chat-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 15px 40px rgba(124, 58, 237, 0.6);
+  }
+
+  .chat-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ef4444;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .chat-window {
+    width: 350px;
+    height: 500px;
+    background: rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(10px);
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .chat-header {
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chat-header h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .chat-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chat-messages {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .chat-message {
+    padding: 0.875rem 1.125rem;
+    border-radius: 1rem;
+    max-width: 80%;
+  }
+
+  .chat-message.bot {
+    background: rgba(71, 85, 105, 0.5);
+    align-self: flex-start;
+  }
+
+  .chat-message.user {
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    align-self: flex-end;
+  }
+
+  .chat-input-wrapper {
+    padding: 1rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .chat-input-wrapper input {
+    flex: 1;
+    background: rgba(71, 85, 105, 0.3);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 0.75rem;
+    padding: 0.875rem;
+    color: white;
+    font-size: 0.95rem;
+  }
+
+  .chat-input-wrapper input:focus {
+    outline: none;
+    border-color: #a855f7;
+  }
+
+  .chat-send-btn {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    border: none;
+    border-radius: 0.75rem;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    transition: all 0.3s;
+  }
+
+  .chat-send-btn:hover {
+    transform: scale(1.05);
+  }
+
+  /* Responsive Design */
+  @media (max-width: 968px) {
+    .nav-links {
+      position: fixed;
+      top: 80px;
+      left: -100%;
+      flex-direction: column;
+      background: rgba(15, 23, 42, 0.98);
+      backdrop-filter: blur(10px);
+      width: 100%;
+      padding: 2rem;
+      transition: left 0.3s;
+      gap: 1rem;
+    }
+
+    .nav-links.active {
+      left: 0;
+    }
+
+    .nav-toggle {
+      display: block;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+    }
+
+    .hero-stats {
+      gap: 2rem;
+    }
+
+    .contact-content {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .footer-content {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .chat-window {
+      width: calc(100vw - 2rem);
+      right: 1rem;
+      bottom: 6rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero-title {
+      font-size: 2rem;
+    }
+
+    .hero-description {
+      font-size: 1rem;
+    }
+
+    .hero-actions {
+      flex-direction: column;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .services-grid,
+    .testimonials-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav id="navbar">
+  <div class="nav-container">
+    <div class="logo">
+      <i class="fas fa-shield-alt"></i>
+      <span>Phantom Recovery</span>
+    </div>
+<ul class="nav-links" id="navLinks">
+  <li><a href="/home">Home</a></li>
+  <li><a href="/services">Services</a></li>
+  <li><a href="/about">About</a></li>
+  <li><a href="/testimonials">Reviews</a></li>
+  <li><a href="/contact">Contact</a></li>
+  <button class="cta-btn" onclick="window.location.href='/register'">
+    <i class="fas fa-lock"></i> Start Recovery
+  </button>
+</ul>
+
+    
+    <button class="nav-toggle" id="navToggle">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section id="home" class="hero">
+  <div class="gradient-orb orb-1"></div>
+  <div class="gradient-orb orb-2"></div>
+  <div class="gradient-orb orb-3"></div>
+  
+  <div class="floating-elements">
+    <div class="crypto-coin">₿</div>
+    <div class="crypto-coin">Ξ</div>
+    <div class="crypto-coin">◎</div>
+  </div>
+  
+  <div class="hero-content">
+    <div class="hero-badge">
+      <i class="fas fa-award"></i>
+      <span>Trusted by 15,000+ Users</span>
+    </div>
+    
+    <h1 class="hero-title">
+      Recover Your Lost<br>
+      <span class="gradient-text">Crypto Assets</span><br>
+      in Minutes
+    </h1>
+    
+    <p class="hero-description">
+      Professional wallet recovery service for Phantom, MetaMask, Trust Wallet, and more. 
+      Get your funds back with our advanced recovery technology and expert support.
+    </p>
+    
+    <div class="hero-actions">
+      <button class="primary-btn">
+        <i class="fas fa-bolt"></i>
+        Start Free Recovery
+      </button>
+      <button class="secondary-btn">
+        <i class="fas fa-comments"></i>
+        Talk to Expert
+      </button>
+    </div>
+    
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-number">$10M+</span>
+        <span class="stat-label">Recovered</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">98%</span>
+        <span class="stat-label">Success Rate</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">24/7</span>
+        <span class="stat-label">Support</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Services Section -->
+<section id="services" class="services">
+  <div class="container">
+    <div class="section-header">
+      <h2>Recovery Services</h2>
+      <p>Professional cryptocurrency recovery with cutting-edge technology</p>
+    </div>
+    
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h3>Wallet Recovery</h3>
+        <p>Recover corrupted or inaccessible wallets using advanced cryptographic techniques.</p>
+        <ul class="service-features">
+          <li><i class="fas fa-check-circle"></i> Seed phrase recovery</li>
+          <li><i class="fas fa-check-circle"></i> Password bypass</li>
+          <li><i class="fas fa-check-circle"></i> File corruption repair</li>
+        </ul>
+        <button class="service-btn">
+          Learn More
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">
+          <i class="fas fa-search"></i>
+        </div>
+        <h3>Lost Key Recovery</h3>
+        <p>Restore access to lost private keys with our specialized recovery algorithms.</p>
+        <ul class="service-features">
+          <li><i class="fas fa-check-circle"></i> Private key restoration</li>
+          <li><i class="fas fa-check-circle"></i> Keystore recovery</li>
+          <li><i class="fas fa-check-circle"></i> Hardware wallet support</li>
+        </ul>
+        <button class="service-btn">
+          Learn More
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+            <div class="service-card">
+        <div class="service-icon">
+          <i class="fas fa-sync-alt"></i>
+        </div>
+        <h3>Transaction Recovery</h3>
+        <p>Track and recover failed or stuck transactions across multiple blockchains.</p>
+        <ul class="service-features">
+          <li><i class="fas fa-check-circle"></i> Stuck transaction fix</li>
+          <li><i class="fas fa-check-circle"></i> MEV protection</li>
+          <li><i class="fas fa-check-circle"></i> Gas optimization</li>
+        </ul>
+        <button class="service-btn">
+          Learn More
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">
+          <i class="fas fa-globe"></i>
+        </div>
+        <h3>Multi-Chain Support</h3>
+        <p>Support for all major blockchains and hundreds of cryptocurrencies.</p>
+        <ul class="service-features">
+          <li><i class="fas fa-check-circle"></i> Bitcoin & Ethereum</li>
+          <li><i class="fas fa-check-circle"></i> BSC & Polygon</li>
+          <li><i class="fas fa-check-circle"></i> 100+ altcoins</li>
+        </ul>
+        <button class="service-btn">
+          Learn More
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Testimonials Section -->
+<section id="testimonials" class="testimonials">
+  <div class="container">
+    <div class="section-header">
+      <h2>Success Stories</h2>
+      <p>Real recoveries from satisfied clients</p>
+    </div>
+
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-header">
+          <div class="avatar">👨‍💻</div>
+          <div class="user-info">
+            <h4>Alex Rodriguez</h4>
+            <span>DeFi Trader</span>
+          </div>
+          <div class="amount-recovered">$50,000</div>
+        </div>
+        <div class="testimonial-content">
+          <p>"Recovered $50K in Bitcoin after losing my wallet password. The team was professional and delivered results in just 48 hours."</p>
+        </div>
+        <div class="testimonial-rating">
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="testimonial-header">
+          <div class="avatar">👩‍🎨</div>
+          <div class="user-info">
+            <h4>Sarah Chen</h4>
+            <span>NFT Collector</span>
+          </div>
+          <div class="amount-recovered">$25,000</div>
+        </div>
+        <div class="testimonial-content">
+          <p>"My MetaMask was compromised and I lost access to my NFT collection. Phantom Recovery got everything back safely."</p>
+        </div>
+        <div class="testimonial-rating">
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="testimonial-header">
+          <div class="avatar">👨‍💼</div>
+          <div class="user-info">
+            <h4>Michael Thompson</h4>
+            <span>Crypto Investor</span>
+          </div>
+          <div class="amount-recovered">$75,000</div>
+        </div>
+        <div class="testimonial-content">
+          <p>"After a phishing attack, I thought my funds were gone forever. The recovery process was smooth and successful."</p>
+        </div>
+        <div class="testimonial-rating">
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="contact">
+  <div class="container contact-content">
+    <div class="contact-info">
+      <h2>Get Your Recovery Started</h2>
+      <p>Our experts are standing by 24/7 to help you recover your lost crypto assets.</p>
+
+      <div class="contact-methods">
+        <div class="contact-method">
+          <i class="fas fa-comment-alt method-icon"></i>
+          <div>
+            <h4>Live Chat</h4>
+            <p>Instant support via our chat system</p>
+          </div>
+        </div>
+
+        <div class="contact-method">
+          <i class="fas fa-envelope method-icon"></i>
+          <div>
+            <h4>Email Support</h4>
+            <p>support@phantomrecovery.com</p>
+          </div>
+        </div>
+
+        <div class="contact-method">
+          <i class="fas fa-clock method-icon"></i>
+          <div>
+            <h4>24/7 Available</h4>
+            <p>We never sleep, your recovery can't wait</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form class="contact-form">
+      <input type="text" placeholder="Full Name" required />
+      <input type="email" placeholder="Email Address" required />
+      <select required>
+        <option value="">Select Wallet Type</option>
+        <option value="metamask">MetaMask</option>
+        <option value="phantom">Phantom</option>
+        <option value="trust">Trust Wallet</option>
+        <option value="coinbase">Coinbase Wallet</option>
+        <option value="other">Other</option>
+      </select>
+      <select required>
+        <option value="">Select Issue Type</option>
+        <option value="lost-password">Lost Password</option>
+        <option value="lost-seed">Lost Seed Phrase</option>
+        <option value="corrupted-wallet">Corrupted Wallet</option>
+        <option value="phishing-attack">Phishing Attack</option>
+        <option value="stuck-transaction">Stuck Transaction</option>
+      </select>
+      <textarea placeholder="Describe your issue..." rows="4"></textarea>
+      <button type="submit">
+        <i class="fas fa-paper-plane"></i> Start Recovery Process
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- Chat Widget -->
+<div class="chat-widget">
+  <button class="chat-toggle" id="chatToggle">
+    <i class="fas fa-comment-alt"></i>
+    <span class="chat-badge" id="chatBadge">1</span>
+  </button>
+
+  <div class="chat-window" id="chatWindow" style="display: none;">
+    <div class="chat-header">
+      <h4>Crypto Recovery Assistant</h4>
+      <button class="chat-close" id="chatClose"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-message bot">👋 Hi! I'm here to help with your crypto recovery. What can I assist you with?</div>
+    </div>
+
+    <div class="chat-input-wrapper">
+      <input type="text" id="chatInput" placeholder="Type your message..." />
+      <button class="chat-send-btn" id="chatSend"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Chat toggle open/close
+  const chatToggle = document.getElementById('chatToggle');
+  const chatWindow = document.getElementById('chatWindow');
+  const chatClose = document.getElementById('chatClose');
+  const chatMessages = document.getElementById('chatMessages');
+  const chatInput = document.getElementById('chatInput');
+  const chatSend = document.getElementById('chatSend');
+  const chatBadge = document.getElementById('chatBadge');
+
+  chatToggle.addEventListener('click', () => {
+    chatWindow.style.display = 'flex';
+    chatBadge.style.display = 'none';
+  });
+
+  chatClose.addEventListener('click', () => {
+    chatWindow.style.display = 'none';
+  });
+
+  function appendMessage(text, sender) {
+    const div = document.createElement('div');
+    div.classList.add('chat-message', sender);
+    div.textContent = text;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  chatSend.addEventListener('click', () => {
+    const message = chatInput.value.trim();
+    if (!message) return;
+    appendMessage(message, 'user');
+    chatInput.value = '';
+
+    // Bot auto-reply after 1s
+    setTimeout(() => {
+      appendMessage("Thanks for reaching out! Our recovery specialist will contact you shortly.", 'bot');
+    }, 1000);
+  });
+
+  chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') chatSend.click();
+  });
+
+  const navToggle = document.getElementById("navToggle");
+    const navLinks = document.getElementById("navLinks");
+
+    navToggle.addEventListener("click", () => {
+      navLinks.classList.toggle("active");
+
+      // Change icon between bars and close
+      const icon = navToggle.querySelector("i");
+      if (navLinks.classList.contains("active")) {
+        icon.classList.remove("fa-bars");
+        icon.classList.add("fa-times");
+      } else {
+        icon.classList.remove("fa-times");
+        icon.classList.add("fa-bars");
+      }
+    });
+
+    // Optional: close menu when clicking a link
+    document.querySelectorAll("#navLinks a").forEach(link => {
+      link.addEventListener("click", () => {
+        navLinks.classList.remove("active");
+        navToggle.querySelector("i").classList.remove("fa-times");
+        navToggle.querySelector("i").classList.add("fa-bars");
+      });
+    });
+</script>
+
+
+<!-- Footer Section -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <i class="fas fa-shield-alt"></i>
+          <span>Phantom Recovery</span>
+        </div>
+        <p>Professional cryptocurrency recovery services you can trust.</p>
+        <div class="social-links">
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <div class="footer-section">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="/services">Wallet Recovery</a></li>
+            <li><a href="/services">Key Recovery</a></li>
+            <li><a href="/services">Transaction Recovery</a></li>
+            <li><a href="/services">Multi-Chain Support</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="/about">About Us</a></li>
+            <li><a href="/testimonials">Testimonials</a></li>
+            <li><a href="contact">Contact</a></li>
+            <li><a href="/privacy">Privacy Policy</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="/contact">24/7 Support</a></li>
+            <li><a href="/help">Help Center</a></li>
+            <li><a href="/guide">Recovery Guide</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 Phantom Recovery. All rights reserved.</p>
+    </div>
+  </div>
+</footer>

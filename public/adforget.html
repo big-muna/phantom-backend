@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phantom Recovery - Admin Reset</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* ---------------- Reset & Base ---------------- */
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #d6def1 0%, #dae2f5 100%); color:#fff; overflow-x:hidden; }
+body { padding:2rem; position: relative; }
+
+/* ---------------- Animated Background ---------------- */
+.bg-animation{position:fixed;inset:0;z-index:0;}
+.floating-shape{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.3;animation:float 20s infinite ease-in-out;}
+.shape1{width:400px;height:400px;background:radial-gradient(circle, rgba(59,130,246,0.4), transparent);top:-200px;left:-200px;}
+.shape2{width:350px;height:350px;background:radial-gradient(circle, rgba(147,197,253,0.4), transparent);bottom:-150px;right:-150px;}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(30px,-30px) scale(1.1);}66%{transform:translate(-20px,20px) scale(0.9);}}
+
+/* ---------------- Reset Container ---------------- */
+.reset-container{
+  position:relative; z-index:2; max-width:500px; width:100%; margin:2rem auto;
+  background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
+  border:1px solid rgba(147,197,253,0.3); border-radius:1.5rem; padding:2.5rem 2rem;
+  box-shadow:0 20px 60px rgba(0,0,0,0.4); animation:slideIn 0.8s ease;
+}
+@keyframes slideIn{from{opacity:0; transform:translateY(30px);}to{opacity:1; transform:translateY(0);}}
+
+/* ---------------- Headers ---------------- */
+.reset-header{text-align:center;margin-bottom:2rem;}
+.reset-title{
+  font-size:2rem;font-weight:700;margin-bottom:0.5rem;
+  background: linear-gradient(135deg,#246adb,#3d87db);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text; animation: gradientFlow 3s infinite; background-size:200% 200%;
+}
+@keyframes gradientFlow{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+.reset-subtitle{color:#3e8df5;font-size:1rem;}
+
+/* ---------------- Form Styles ---------------- */
+.form-group{margin-bottom:1.5rem;}
+.form-label{display:block;margin-bottom:0.5rem;color:#3484e6;font-weight:500;font-size:0.9rem;}
+.form-label span{color:#f87171;}
+.input-wrapper{position:relative;}
+.input-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:#93c5fd;font-size:1.1rem;}
+.form-input{
+  width:100%;padding:1rem 1rem 1rem 3rem;
+  background: rgba(255,255,255,0.15); border:1px solid rgba(147,197,253,0.3);
+  border-radius:0.5rem;color:#3584df;font-size:1rem; transition: all 0.3s ease;
+}
+.form-input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 20px rgba(59,130,246,0.3);background: rgba(255,255,255,0.2);}
+.form-input.error{border-color:#f87171;}
+.form-input.success{border-color:#60a5fa;}
+.submit-btn{width:100%; padding:1rem; border:none; border-radius:0.5rem; background:#3b82f6; color:#fff; font-size:1rem; cursor:pointer; transition: all 0.3s ease;}
+.submit-btn:hover{background:#2563eb;}
+.success-message{background: rgba(59,130,246,0.2); border-left: 4px solid #60a5fa; color:#fff; padding:0.8rem 1rem; margin-bottom:1rem; border-radius:0.5rem; display:none;}
+.success-message.show{display:block;}
+.error-message{background: rgba(248,113,113,0.2); border-left: 4px solid #f87171; color:#fff; padding:0.8rem 1rem; margin-bottom:1rem; border-radius:0.5rem; display:none;}
+
+/* ---------------- OTP Inputs ---------------- */
+.otp-container{display:flex;justify-content:space-between;margin:1.5rem 0;}
+.otp-input{
+  width:3rem;height:3rem;text-align:center;font-size:1.5rem;
+  border-radius:0.5rem;border:1px solid rgba(147,197,253,0.3);
+  background: rgba(255,255,255,0.15);color:#fff; transition: all 0.3s;
+}
+.otp-input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 15px rgba(59,130,246,0.3);}
+.timer-resend{display:flex;justify-content:space-between;align-items:center;margin-top:1rem;font-size:0.9rem;color:#bfdbfe;}
+.timer-resend button{background:none;border:none;color:#3b82f6;cursor:pointer;}
+.timer-resend button:disabled{color:gray;cursor:not-allowed;}
+
+/* ---------------- Mobile ---------------- */
+@media (max-width:480px){
+  body{padding:1rem;}
+  .reset-container{padding:1.5rem 1rem; margin:1rem auto;}
+  .reset-title{font-size:1.7rem;}
+  .reset-subtitle{font-size:0.9rem;}
+  .form-label{font-size:0.85rem;}
+  .form-input{font-size:0.95rem; padding:0.8rem 0.8rem 0.8rem 2.5rem;}
+  .input-icon{font-size:1rem; left:0.8rem;}
+  .submit-btn{font-size:0.95rem; padding:0.85rem;}
+  .otp-input{width:2.5rem;height:2.5rem;font-size:1.2rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-animation">
+  <div class="floating-shape shape1"></div>
+  <div class="floating-shape shape2"></div>
+</div>
+
+<!-- ---------------- Email Step ---------------- -->
+<div class="reset-container" id="emailStep">
+  <div class="reset-header">
+    <h1 class="reset-title">Admin Reset Access</h1>
+    <p class="reset-subtitle">Enter your admin email to receive a secure code</p>
+  </div>
+  <form id="emailForm">
+    <div class="form-group">
+      <label class="form-label">Admin Email <span>*</span></label>
+      <div class="input-wrapper">
+        <i class="fas fa-user-shield input-icon"></i>
+        <input type="email" class="form-input" id="email" placeholder="admin@phantomrec.com" required>
+      </div>
+      <div class="error-message" id="emailError">Please enter a valid admin email</div>
+    </div>
+    <button type="submit" class="submit-btn"><i class="fas fa-paper-plane"></i> Send Code</button>
+    <div class="success-message" id="emailSuccess">Code sent! Check your admin inbox.</div>
+  </form>
+</div>
+
+<!-- ---------------- OTP Step ---------------- -->
+<div class="reset-container" id="otpStep" style="display:none;">
+  <div class="reset-header">
+    <h1 class="reset-title">Verification Required</h1>
+    <p class="reset-subtitle">Enter the 6-digit code sent to <span id="maskedEmail"></span></p>
+  </div>
+  <div class="otp-container">
+    <input type="text" maxlength="1" class="otp-input" />
+    <input type="text" maxlength="1" class="otp-input" />
+    <input type="text" maxlength="1" class="otp-input" />
+    <input type="text" maxlength="1" class="otp-input" />
+    <input type="text" maxlength="1" class="otp-input" />
+    <input type="text" maxlength="1" class="otp-input" />
+  </div>
+  <div class="timer-resend">
+    <span id="timer">01:30</span>
+    <button id="resendBtn" disabled>Resend Code</button>
+  </div>
+  <button class="submit-btn" id="verifyBtn">Verify Code</button>
+  <div class="success-message" id="otpSuccess">Verified — proceed to set a new password.</div>
+  <div class="error-message" id="otpError">Invalid code. Try again.</div>
+</div>
+
+<!-- ---------------- New Password Step ---------------- -->
+<div class="reset-container" id="passwordStep" style="display:none;">
+  <div class="reset-header">
+    <h1 class="reset-title">Set New Admin Password</h1>
+    <p class="reset-subtitle">Enter a secure password to regain access</p>
+  </div>
+  <form id="passwordForm">
+    <div class="form-group">
+      <label class="form-label">New Password <span>*</span></label>
+      <div class="input-wrapper">
+        <i class="fas fa-lock input-icon"></i>
+        <input type="password" class="form-input" id="newPassword" placeholder="New Password" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Confirm Password <span>*</span></label>
+      <div class="input-wrapper">
+        <i class="fas fa-lock input-icon"></i>
+        <input type="password" class="form-input" id="confirmPassword" placeholder="Confirm Password" required>
+      </div>
+    </div>
+    <button type="submit" class="submit-btn">Set Password</button>
+    <div class="success-message" id="passwordSuccess">Admin password updated successfully!</div>
+    <div class="error-message" id="passwordError">Passwords do not match or too weak.</div>
+  </form>
+</div>
+
+<script>
+// ---------------- Email Step ----------------
+const emailForm = document.getElementById('emailForm');
+const emailInput = document.getElementById('email');
+const emailError = document.getElementById('emailError');
+const emailSuccess = document.getElementById('emailSuccess');
+const emailStep = document.getElementById('emailStep');
+const otpStep = document.getElementById('otpStep');
+const passwordStep = document.getElementById('passwordStep');
+const maskedEmail = document.getElementById('maskedEmail');
+
+emailForm.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const emailVal = emailInput.value.trim();
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!re.test(emailVal)) {
+    emailInput.classList.add('error');
+    emailError.style.display = 'block';
+    emailSuccess.style.display = 'none';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/request-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailVal })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+
+    emailInput.classList.remove('error');
+    emailInput.classList.add('success');
+    emailError.style.display = 'none';
+    emailSuccess.style.display = 'block';
+
+    setTimeout(() => {
+      emailStep.style.display = 'none';
+      otpStep.style.display = 'block';
+      maskedEmail.textContent = emailVal.replace(/(.{1}).+(@.+)/, "$1***$2");
+      startTimer(90); // 1.5 min timer
+    }, 1000);
+  } catch (err) {
+    emailError.textContent = err.message;
+    emailError.style.display = 'block';
+    emailSuccess.style.display = 'none';
+  }
+});
+
+// ---------------- OTP Step ----------------
+const otpInputs = document.querySelectorAll('.otp-input');
+otpInputs.forEach((input, i) => {
+  input.addEventListener('input', () => {
+    if (input.value.length === 1 && i < otpInputs.length - 1) otpInputs[i + 1].focus();
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && input.value === '' && i > 0) otpInputs[i - 1].focus();
+  });
+});
+
+const verifyBtn = document.getElementById('verifyBtn');
+const otpError = document.getElementById('otpError');
+const otpSuccess = document.getElementById('otpSuccess');
+
+verifyBtn.addEventListener('click', async () => {
+  const code = Array.from(otpInputs).map(i => i.value).join('');
+  const emailVal = emailInput.value.trim();
+
+  try {
+    const res = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailVal, otp: code })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+
+    otpError.style.display = 'none';
+    otpSuccess.style.display = 'block';
+    setTimeout(() => {
+      otpStep.style.display = 'none';
+      passwordStep.style.display = 'block';
+    }, 500);
+  } catch (err) {
+    otpError.textContent = err.message;
+    otpError.style.display = 'block';
+    otpSuccess.style.display = 'none';
+  }
+});
+
+// ---------------- Timer & Resend ----------------
+let timerInterval;
+const timerDisplay = document.getElementById('timer');
+const resendBtn = document.getElementById('resendBtn');
+
+function startTimer(seconds) {
+  resendBtn.disabled = true;
+  let time = seconds;
+  updateTimerDisplay(time);
+  timerInterval = setInterval(() => {
+    time--;
+    updateTimerDisplay(time);
+    if (time <= 0) {
+      clearInterval(timerInterval);
+      resendBtn.disabled = false;
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay(seconds) {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const s = (seconds % 60).toString().padStart(2, '0');
+  timerDisplay.textContent = `${m}:${s}`;
+}
+
+resendBtn.addEventListener('click', async () => {
+  otpInputs.forEach(input => input.value = '');
+  startTimer(90); // restart timer
+  try {
+    const res = await fetch('/api/auth/request-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailInput.value.trim() })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    alert('A new code has been sent to your email.');
+  } catch (err) {
+    alert('Failed to resend OTP: ' + err.message);
+  }
+});
+
+// ---------------- Password Step ----------------
+const passwordForm = document.getElementById('passwordForm');
+const newPassword = document.getElementById('newPassword');
+const confirmPassword = document.getElementById('confirmPassword');
+const passwordSuccess = document.getElementById('passwordSuccess');
+const passwordError = document.getElementById('passwordError');
+
+passwordForm.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const emailVal = emailInput.value.trim();
+
+  if (newPassword.value.length < 6) {
+    passwordError.textContent = 'Password too short, min 6 chars';
+    passwordError.style.display = 'block';
+    passwordSuccess.style.display = 'none';
+    return;
+  }
+  if (newPassword.value !== confirmPassword.value) {
+    passwordError.textContent = 'Passwords do not match';
+    passwordError.style.display = 'block';
+    passwordSuccess.style.display = 'none';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailVal, password: newPassword.value })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+
+    passwordError.style.display = 'none';
+    passwordSuccess.style.display = 'block';
+  } catch (err) {
+    passwordError.textContent = err.message;
+    passwordError.style.display = 'block';
+    passwordSuccess.style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
