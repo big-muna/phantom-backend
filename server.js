@@ -918,7 +918,7 @@ import authRoutes from "./routes/auth.js";
 app.use("/api/auth", authRoutes);
 
 // ✅ Catch-all route for frontend
-app.get('*', (req, res) => {
+app.use((req, res, next) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
