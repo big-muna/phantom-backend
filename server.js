@@ -75,16 +75,6 @@ pool.connect()
   .then(() => console.log("✅ Connected to Render PostgreSQL Database"))
   .catch((err) => console.error("❌ Database connection error:", err));
 
-// ---------------- Frontend Path ----------------
-const frontendPath = path.join(__dirname, "public");
-app.use(express.static(frontendPath));
-
-pages.forEach((page) => {
-  const routePath = page === "index" ? "/" : `/${page}`;
-  app.get(routePath, (req, res) => {
-    res.sendFile(path.join(frontendPath, `${page}.html`));
-  });
-});
 // ---------------- Nodemailer Setup ----------------
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -907,11 +897,16 @@ app.get("/api/logs/download", (req, res) => res.download(logFile, "audit.log"));
 
 // =====================================================================
 // ------------------------ PAGES & AUTH -------------------------------
+// ---------------- PAGES & ROUTES ----------------
 const pages = [
   "index","about","analytics","contact","dashboard","history","home","login",
   "pass","profile","register","request","services","setting","support","wallet",
   "testimonials","admin","adlogin","adforget"
 ];
+
+const frontendPath = path.join(__dirname, "public");
+app.use(express.static(frontendPath));
+
 pages.forEach((page) => {
   const routePath = page === "index" ? "/" : `/${page}`;
   app.get(routePath, (req, res) => {
@@ -923,8 +918,8 @@ import authRoutes from "./routes/auth.js";
 app.use("/api/auth", authRoutes);
 
 // ✅ Catch-all route for frontend
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // ------------------------- SERVER START ------------------------------
