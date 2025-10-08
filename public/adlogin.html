@@ -122,23 +122,41 @@
   </div>
 
   <script>
-    const loginForm = document.getElementById("loginForm");
-    const loginError = document.getElementById("loginError");
+  const loginForm = document.getElementById("loginForm");
+  const loginError = document.getElementById("loginError");
 
-    loginForm.addEventListener("submit", function(e){
-      e.preventDefault();
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
+  loginForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-      // Change these credentials as needed
-      if(user === "admin@example.com" && pass === "AdminPass123"){
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+    const payload = { username: user, password: pass };
+
+    try {
+      const res = await fetch("https://phantom-backend-4bwk.onrender.com/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // ✅ Login successful
+        localStorage.setItem("adminToken", data.token);
         loginError.style.display = "none";
-        // Redirect to admin page
-        window.location.href = "/admin"; 
+        window.location.href = "/admin-dashboard.html"; // your admin dashboard page
       } else {
+        // ❌ Invalid credentials or backend rejection
+        loginError.textContent = data.message || "Invalid username or password.";
         loginError.style.display = "block";
       }
-    });
-  </script>
+    } catch (err) {
+      console.error("Login Error:", err);
+      loginError.textContent = "Network error. Please try again later.";
+      loginError.style.display = "block";
+    }
+  });
+</script>
 </body>
 </html>
