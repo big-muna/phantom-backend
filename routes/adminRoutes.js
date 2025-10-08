@@ -2,7 +2,6 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { pool } from "../db.js"; // adjust path to where your db connection is
-import { authenticateJWT, logAction, io, sendEmail, recoveryHistory } from "../utils.js"; // adjust imports
 
 const router = express.Router();
 
