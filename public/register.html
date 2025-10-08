@@ -436,7 +436,8 @@ form.addEventListener("submit", async function (e) {
 
     try {
       // ✅ Always include full URL when testing locally
-      const res = await fetch("http://localhost:5000/api/register", {
+      const res = await fetch("https://phantomrec-backend.onrender.com/api/register", {
+        
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email, password }),
