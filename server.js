@@ -15,6 +15,7 @@ import session from "express-session";
 import jwt from "jsonwebtoken";
 import { Pool } from "pg";
 import { fileURLToPath } from "url";
+import adminRoutes from "./routes/adminRoutes.js";
 
 // ✅ Define __dirname for ES modules (must come before using it)
 const __filename = fileURLToPath(import.meta.url);
