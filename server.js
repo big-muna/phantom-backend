@@ -432,9 +432,40 @@ app.patch("/api/user/:id", (req, res) => {
   res.json({ message:"Profile updated", user });
 });
 
-// ===================== ADMIN & SYSTEM ROUTES =====================
 
-// ------------------------ USER MANAGEMENT ------------------------
+// ===================== ADMIN LOGIN =====================
+app.post("/api/admin/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM users WHERE email=$1 AND role='admin'",
+      [username]
+    );
+
+    if (result.rows.length === 0)
+      return res.status(401).json({ message: "Invalid email or password" });
+
+    const admin = result.rows[0];
+    const validPass = await bcrypt.compare(password, admin.password);
+
+    if (!validPass)
+      return res.status(401).json({ message: "Invalid email or password" });
+
+    const token = jwt.sign(
+      { id: admin.id, role: admin.role },
+      process.env.JWT_SECRET || "secret123",
+      { expiresIn: "2h" }
+    );
+
+    res.json({ message: "Login successful", token });
+  } catch (err) {
+    console.error("❌ Admin login error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ===================== USER MANAGEMENT =====================
 
 // Get all users (admin only)
 app.get("/api/admin/users", authenticateJWT, async (req, res) => {
@@ -444,7 +475,7 @@ app.get("/api/admin/users", authenticateJWT, async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    console.error("Error fetching users:", err);
+    console.error("❌ Error fetching users:", err);
     res.status(500).json({ message: "Error fetching users" });
   }
 });
@@ -452,30 +483,26 @@ app.get("/api/admin/users", authenticateJWT, async (req, res) => {
 // Toggle user active status
 app.patch("/api/admin/users/:id/toggle", authenticateJWT, async (req, res) => {
   const { id } = req.params;
-
   try {
     const result = await pool.query(
       "UPDATE users SET active = NOT active WHERE id=$1 RETURNING *",
       [id]
     );
 
-    if (result.rows.length === 0) {
+    if (result.rows.length === 0)
       return res.status(404).json({ message: "User not found" });
-    }
 
-    logAction("USER_TOGGLE", result.rows[0]);
-    io.emit("updateUsers", result.rows[0]); // push update to frontend
+    io.emit("updateUsers", result.rows[0]); // Live update to frontend (optional)
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("Error toggling user status:", err);
+    console.error("❌ Error toggling user status:", err);
     res.status(500).json({ message: "Error toggling user status" });
   }
 });
 
-// Reset user password
+// Reset user password (admin sets temporary password)
 app.patch("/api/admin/users/:id/reset", authenticateJWT, async (req, res) => {
   const { id } = req.params;
-
   try {
     const tempPassword = "changeme";
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
@@ -485,65 +512,74 @@ app.patch("/api/admin/users/:id/reset", authenticateJWT, async (req, res) => {
       [hashedPassword, id]
     );
 
-    if (result.rows.length === 0) {
+    if (result.rows.length === 0)
       return res.status(404).json({ message: "User not found" });
-    }
 
-    logAction("USER_RESET", { userId: id });
-    res.json({ message: "Password reset for user", tempPassword });
+    res.json({ message: "Password reset successfully", tempPassword });
   } catch (err) {
-    console.error("Error resetting password:", err);
+    console.error("❌ Error resetting password:", err);
     res.status(500).json({ message: "Error resetting password" });
   }
 });
 
-// Update recovery status
+// ===================== UPDATE RECOVERY STATUS =====================
 app.patch("/api/admin/recovery/:id/status", authenticateJWT, async (req, res) => {
+  const { id } = req.params;
+  const { status, assignedTo } = req.body;
+
   try {
-    const { status, assignedTo } = req.body;
-    const recovery = recoveryHistory.find(r => r.id == req.params.id);
-
-    if (!recovery) return res.status(404).json({ message: "Recovery not found" });
-
-    // Validate status
     const validStatuses = ["Pending", "In Progress", "Completed", "Rejected"];
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json({ message: "Invalid status value" });
     }
 
-    // Update fields
-    if (status) recovery.status = status;
-    if (assignedTo) recovery.assignedTo = assignedTo;
-    recovery.updatedAt = new Date();
+    // Fetch recovery entry from DB
+    const recoveryQuery = await pool.query("SELECT * FROM recovery WHERE id=$1", [id]);
+    if (recoveryQuery.rows.length === 0)
+      return res.status(404).json({ message: "Recovery not found" });
 
-    // Log the action
-    logAction("RECOVERY_UPDATE", { id: recovery.id, status, assignedTo });
+    const recovery = recoveryQuery.rows[0];
 
-    // Emit real-time update via Socket.IO
-    io.emit("recoveryUpdate", recovery);
+    // Update status + assigned admin
+    const updated = await pool.query(
+      "UPDATE recovery SET status=$1, assigned_to=$2, updated_at=NOW() WHERE id=$3 RETURNING *",
+      [status || recovery.status, assignedTo || recovery.assigned_to, id]
+    );
 
-    // Send email notification to user (if email exists)
-    if (recovery.userEmail) {
-      await sendEmail({
-        to: recovery.userEmail,
-        subject: `Your Recovery Request Status Updated`,
+    const updatedRecovery = updated.rows[0];
+
+    // Notify via email if user has one
+    if (updatedRecovery.user_email) {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"Phantom Recovery" <${process.env.SMTP_USER}>`,
+        to: updatedRecovery.user_email,
+        subject: "Your Recovery Request Status Updated",
         html: `
-          <p>Hello ${recovery.user || "User"},</p>
-          <p>Your recovery request <strong>${recovery.type}</strong> status has been updated to: <strong>${status}</strong>.</p>
+          <p>Hello ${updatedRecovery.user_name || "User"},</p>
+          <p>Your recovery request <strong>${updatedRecovery.type}</strong> 
+          has been updated to <strong>${updatedRecovery.status}</strong>.</p>
           ${assignedTo ? `<p>Assigned To: ${assignedTo}</p>` : ""}
-          <p>Submitted At: ${new Date(recovery.submittedAt).toLocaleString()}</p>
-          <p>Thank you,<br/>Phantom Recovery Team</p>
-        `
+          <p>Updated: ${new Date().toLocaleString()}</p>
+          <p>– Phantom Recovery Team</p>
+        `,
       });
     }
 
-    res.json({ message: "Recovery status updated successfully", recovery });
+    io.emit("recoveryUpdate", updatedRecovery); // Optional: Live frontend updates
+    res.json({ message: "Recovery status updated", recovery: updatedRecovery });
   } catch (err) {
     console.error("❌ Error updating recovery status:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // ------------------------ CONTACT & TICKETS ------------------------
 
