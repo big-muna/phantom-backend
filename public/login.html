@@ -193,114 +193,131 @@ body { padding:2rem; position:relative; }
 </div>
 
 <script>
-// ---------------- Password Toggle ----------------
+// ================= BACKEND CONFIG =================
+const backendURL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "https://phantom-backend-4bwk.onrender.com"; // ✅ live backend
+
+// ================= PASSWORD TOGGLE =================
 function togglePassword(inputId, toggleId) {
   const input = document.getElementById(inputId);
-  const icon = document.getElementById(toggleId).querySelector('i');
-  if (input.type === 'password') {
-    input.type = 'text';
-    icon.classList.replace('fa-eye', 'fa-eye-slash');
+  const icon = document.getElementById(toggleId)?.querySelector("i");
+  if (!input || !icon) return;
+
+  if (input.type === "password") {
+    input.type = "text";
+    icon.classList.replace("fa-eye", "fa-eye-slash");
   } else {
-    input.type = 'password';
-    icon.classList.replace('fa-eye-slash', 'fa-eye');
+    input.type = "password";
+    icon.classList.replace("fa-eye-slash", "fa-eye");
   }
 }
-document.getElementById('toggleLoginPassword')?.addEventListener('click', () =>
-  togglePassword('loginPassword', 'toggleLoginPassword')
-);
+document
+  .getElementById("toggleLoginPassword")
+  ?.addEventListener("click", () =>
+    togglePassword("loginPassword", "toggleLoginPassword")
+  );
 
-// ---------------- DOM Elements ----------------
-const loginForm = document.getElementById('loginForm');
-const loginMessage = document.getElementById('loginMessage');
-const successModal = document.getElementById('successModal');
+// ================= DOM ELEMENTS =================
+const loginForm = document.getElementById("loginForm");
+const loginMessage = document.getElementById("loginMessage");
+const successModal = document.getElementById("successModal");
 
-// ---------------- Error & Success Handlers ----------------
+// ================= ERROR & SUCCESS HANDLERS =================
 function showError(msg) {
-  loginMessage.textContent = msg;
-  loginMessage.classList.add('show');
+  if (loginMessage) {
+    loginMessage.textContent = msg;
+    loginMessage.classList.add("show");
+  }
 }
 
 function hideError() {
-  loginMessage.textContent = '';
-  loginMessage.classList.remove('show');
+  if (loginMessage) {
+    loginMessage.textContent = "";
+    loginMessage.classList.remove("show");
+  }
 }
 
 function showSuccessModal() {
-  successModal.classList.add('show');
+  successModal?.classList.add("show");
 }
 
 function closeModal() {
-  successModal.classList.remove('show');
+  successModal?.classList.remove("show");
 }
-window.closeModal = closeModal; // Make accessible from HTML
+window.closeModal = closeModal;
 
-// ---------------- Login Form Submit ----------------
-loginForm.addEventListener('submit', async function(e){
+// ================= LOGIN FORM SUBMIT =================
+loginForm?.addEventListener("submit", async function (e) {
   e.preventDefault();
   hideError();
 
-  const emailField = document.getElementById('loginUser');
-  const passField = document.getElementById('loginPassword');
+  const emailField = document.getElementById("loginUser");
+  const passField = document.getElementById("loginPassword");
 
   // --- Field Validation ---
   let valid = true;
   if (!emailField.value.trim()) {
-    document.getElementById('loginUserError').classList.add('show');
+    document.getElementById("loginUserError")?.classList.add("show");
     valid = false;
   } else {
-    document.getElementById('loginUserError').classList.remove('show');
+    document.getElementById("loginUserError")?.classList.remove("show");
   }
   if (!passField.value.trim()) {
-    document.getElementById('loginPasswordError').classList.add('show');
+    document.getElementById("loginPasswordError")?.classList.add("show");
     valid = false;
   } else {
-    document.getElementById('loginPasswordError').classList.remove('show');
+    document.getElementById("loginPasswordError")?.classList.remove("show");
   }
   if (!valid) return;
 
   // --- Login Request ---
   const payload = {
     email: emailField.value.trim(),
-    password: passField.value.trim()
+    password: passField.value.trim(),
   };
 
   try {
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const res = await fetch(`${backendURL}/api/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
 
-    if (res.ok && data.success) {
+    if (res.ok && (data.success || data.token)) {
       // Save user info
-      localStorage.setItem('userId', data.userId);
-      localStorage.setItem('role', data.role);
+      if (data.userId) localStorage.setItem("userId", data.userId);
+      if (data.role) localStorage.setItem("role", data.role);
+      if (data.token) localStorage.setItem("token", data.token);
 
-      // Show success modal and redirect
+      // Show success modal & redirect
       showSuccessModal();
       setTimeout(() => {
-        if (data.role === 'client') window.location.href = '/dashboard';
-        else if (data.role === 'admin') window.location.href = '/admin';
-        else window.location.href = '/';
+        const role = data.role?.toLowerCase() || "client";
+        if (role === "admin") window.location.href = "/admin";
+        else window.location.href = "/dashboard";
       }, 1500);
     } else {
-      showError(data.message || 'Login failed. Check credentials.');
+      showError(data.message || "Invalid email or password.");
     }
-  } catch(err) {
-    console.error('Login error:', err);
-    showError('Cannot connect to server. Try again later.');
+  } catch (err) {
+    console.error("Login error:", err);
+    showError("Cannot connect to the server. Please try again later.");
   }
 });
 
-// ---------------- Social Buttons ----------------
-document.querySelectorAll('.social-btn').forEach(btn => {
-  btn.addEventListener('click', function(e){
+// ================= SOCIAL BUTTONS =================
+document.querySelectorAll(".social-btn").forEach((btn) => {
+  btn.addEventListener("click", function (e) {
     e.preventDefault();
-    let platform = btn.classList.contains('google') ? 'Google' :
-                   btn.classList.contains('facebook') ? 'Facebook' :
-                   'Instagram';
+    const platform = btn.classList.contains("google")
+      ? "Google"
+      : btn.classList.contains("facebook")
+      ? "Facebook"
+      : "Instagram";
     alert(`Redirecting to ${platform} login...`);
   });
 });
