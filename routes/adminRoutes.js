@@ -2,6 +2,11 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { pool } from "../db.js"; // adjust path to where your db connection is
+import { authenticateJWT } from "../middleware/auth.js";
+import { logAction } from "../utils.js";       // if utils.js contains logAction()
+import { io } from "../server.js";            // Socket.io instance
+import sendEmail from "../email/sendEmail.js";// your email function
+import { recoveryHistory } from "../data/recovery.js"; //
 
 const router = express.Router();
 
