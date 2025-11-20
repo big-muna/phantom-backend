@@ -65,6 +65,34 @@ function authenticateJWT(req, res, next) {
   }
 }
 
+
+// =================== Admin Seeder ==================
+async function createAdminUser() {
+  const adminEmail = "admin@phantomrecovery.com";
+  const adminPassword = "supersecure123";
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM users WHERE email=$1 AND role='admin'",
+      [adminEmail]
+    );
+
+    if (result.rows.length === 0) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      await pool.query(
+        `INSERT INTO users (first_name, last_name, email, password, role, active)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        ["Admin", "User", adminEmail, hashedPassword, "admin", true]
+      );
+      console.log(`✅ Admin user created: ${adminEmail} / ${adminPassword}`);
+    } else {
+      console.log("Admin user already exists, skipping creation.");
+    }
+  } catch (err) {
+    console.error("❌ Failed to create admin user:", err);
+  }
+}
+
 // ================================================================
 // 🔗 Database Connection
 // ================================================================
@@ -188,7 +216,6 @@ app.get("/api/test-db", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-
 
 
 // =====================================================================
@@ -433,8 +460,6 @@ app.patch("/api/user/:id", (req, res) => {
   logAction("USER_UPDATE", { id: user.id, changes: req.body });
   res.json({ message:"Profile updated", user });
 });
-
-// ------------------------ CONTACT & TICKETS ------------------------
 
 // ---------------------- CREATE NEW TICKET ----------------------------
 app.post("/api/contact", async (req, res) => {
