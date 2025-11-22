@@ -3,46 +3,40 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { pool } from "../db.js"; // adjust path to where your db connection is
 import { authenticateJWT } from "../middleware/auth.js";
-import { logAction } from "../utils.js";       // if utils.js contains logAction()
-import { io } from "../server.js";            // Socket.io instance
-import sendEmail from "../email/sendEmail.js";// your email function
-import { recoveryHistory } from "../data/recovery.js"; //
+import { logAction } from "../utils.js";
+import { io } from "../server.js"; 
+import sendEmail from "../email/sendEmail.js";
+import { recoveryHistory } from "../data/recovery.js";
 
 const router = express.Router();
 
-// ===================== ADMIN LOGIN =====================
+// ===========================================
+// =============== ADMIN LOGIN ===============
+// ===========================================
+
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
-  try {
-    const result = await pool.query(
-      "SELECT * FROM users WHERE email=$1 AND role='admin'",
-      [username]
-    );
+  // 💥 HARD-CODED ADMIN ACCOUNT
+  const ADMIN_EMAIL = "admin@phantom.com";
+  const ADMIN_PASSWORD = "admin123"; // Change it if you want
 
-    if (result.rows.length === 0)
-      return res.status(401).json({ message: "Invalid email or password" });
-
-    const admin = result.rows[0];
-    const validPass = await bcrypt.compare(password, admin.password);
-
-    if (!validPass)
-      return res.status(401).json({ message: "Invalid email or password" });
-
+  if (username === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
     const token = jwt.sign(
-      { id: admin.id, role: admin.role },
+      { id: "admin", role: "admin" },
       process.env.JWT_SECRET || "secret123",
       { expiresIn: "2h" }
     );
 
-    res.json({ message: "Login successful", token });
-  } catch (err) {
-    console.error("❌ Admin login error:", err);
-    res.status(500).json({ message: "Server error" });
+    return res.json({ message: "Login successful", token });
   }
+
+  return res.status(401).json({ message: "Invalid admin credentials" });
 });
 
-// ===================== USER MANAGEMENT =====================
+// ===========================================
+// ============= USER MANAGEMENT =============
+// ===========================================
 
 // Get all users (admin only)
 router.get("/users", authenticateJWT, async (req, res) => {
@@ -67,12 +61,12 @@ router.patch("/users/:id/toggle", authenticateJWT, async (req, res) => {
       [id]
     );
 
-    if (result.rows.length === 0) {
+    if (result.rows.length === 0)
       return res.status(404).json({ message: "User not found" });
-    }
 
     logAction("USER_TOGGLE", result.rows[0]);
-    io.emit("updateUsers", result.rows[0]); // push update to frontend
+    io.emit("updateUsers", result.rows[0]);
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error("Error toggling user status:", err);
@@ -93,11 +87,11 @@ router.patch("/users/:id/reset", authenticateJWT, async (req, res) => {
       [hashedPassword, id]
     );
 
-    if (result.rows.length === 0) {
+    if (result.rows.length === 0)
       return res.status(404).json({ message: "User not found" });
-    }
 
     logAction("USER_RESET", { userId: id });
+
     res.json({ message: "Password reset for user", tempPassword });
   } catch (err) {
     console.error("Error resetting password:", err);
@@ -105,18 +99,21 @@ router.patch("/users/:id/reset", authenticateJWT, async (req, res) => {
   }
 });
 
-// Update recovery status
+// ===========================================
+// ========= UPDATE RECOVERY STATUS ==========
+// ===========================================
+
 router.patch("/recovery/:id/status", authenticateJWT, async (req, res) => {
   try {
     const { status, assignedTo } = req.body;
-    const recovery = recoveryHistory.find(r => r.id == req.params.id);
+    const recovery = recoveryHistory.find((r) => r.id == req.params.id);
 
-    if (!recovery) return res.status(404).json({ message: "Recovery not found" });
+    if (!recovery)
+      return res.status(404).json({ message: "Recovery not found" });
 
     const validStatuses = ["Pending", "In Progress", "Completed", "Rejected"];
-    if (status && !validStatuses.includes(status)) {
+    if (status && !validStatuses.includes(status))
       return res.status(400).json({ message: "Invalid status value" });
-    }
 
     if (status) recovery.status = status;
     if (assignedTo) recovery.assignedTo = assignedTo;
